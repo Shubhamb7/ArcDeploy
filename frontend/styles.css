@@ -1,0 +1,355 @@
+.containerbox {
+
+  display: flex;
+  flex-direction: row;
+}
+.nav-link.active {
+  font-weight: bold;
+}
+/*============ TOOLBOX =============*/
+
+.toolbox-container {
+  position: fixed;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+  left: -300px;
+  margin-bottom: 5px;
+  width: 150px;
+  height: 450px;
+  border: 2px solid #ddd;
+  transition: left 0.3s ease-in-out;
+}
+.toolbox-container.open {
+  left: 0;
+}
+
+.toolbox-item {
+  padding: 5px;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 92%;
+  cursor: move;
+}
+
+.toolbox-item.awscloud {
+  border: 2px solid black;
+}
+
+.toolbox-item.region {
+  border: 2px solid gray;
+}
+
+.toolbox-item.vpc {
+  border: 2px solid #248814;
+}
+
+.toolbox-item.igw {
+  border: 2px solid #F58534;
+  background-color: #F58534;
+  color: white;
+}
+
+.toolbox-item.nat {
+  border: 1px solid #4E78CA;
+  background-color: #4E78CA;
+  color: white;
+}
+
+.toolbox-item.subnet {
+  border: 1px solid #E9F3E6;
+  background-color: #E9F3E6;
+}
+
+.toolbox-item.privatesubnet {
+  border: 1px solid #E5F3FB;
+  background-color: #E5F3FB;
+}
+
+.toolbox-item.securitygroup {
+  border: 2px solid purple;
+  background-color: transparent;
+}
+
+.toolbox-item.ec2 {
+  border: 1px solid #FDA026;
+  background-color: #FDA026;
+  color: white;
+}
+
+.toolbox-item:hover{
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+  border: 3px solid black;
+}
+
+/*============ DRAWING AREA =============*/
+
+.drawing-area {
+  flex: 1;
+  min-height: 450px;
+  background-color: #fbfbfb;
+  border: 2px solid #ddd;
+  margin-top: 5px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 5px;
+  position: relative;
+  z-index: 2;
+  transition: margin-left 0.3s ease-in-out;
+}
+.drawing-area.shift-left {
+  margin-left: 170px;
+}
+
+/*============ DIAGRAM =============*/
+
+.diagram {
+  position: absolute;
+  background-color: transparent;
+  border: 1px solid #999;
+  cursor: move;
+  resize: both;
+  overflow: auto;
+  padding: 5px;
+  min-width: 80px;
+  min-height: 40px;
+  font-size: small;
+}
+
+.diagram.awscloud {
+  border-color: black;
+}
+.diagram.awscloud:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.vpc {
+  border-color: #248814;
+  border-radius: 5px;
+}
+.diagram.vpc:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.igw {
+  border: 1px solid #df7123;
+  background-color: #F58534;
+  color: white;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 5px;
+}
+.diagram.igw:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.nat {
+  border: 1px solid #4E78CA;
+  background-color: #4E78CA;
+  color: white;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 5px;
+}
+.diagram.nat:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.subnet {
+  border-color: #E9F3E6;
+  background-color: #E9F3E6;
+  border-radius: 5px;
+}
+.diagram.subnet:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.privatesubnet {
+  border-color: #E5F3FB;
+  background-color: #E5F3FB;
+  border-radius: 5px;
+}
+.diagram.privatesubnet:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.region {
+  border-color: gray;
+}
+.diagram.region:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.ec2 {
+  background-color: #FDA026;
+  border-color: #FDA026;
+  color: white;
+  border-radius: 10px;
+}
+.diagram.ec2:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.securitygroup {
+  border: 1px solid purple;
+  background-color: transparent;
+  border-radius: 5px;
+}
+.diagram.securitygroup:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  bottom: 0;
+  right: 0;
+  background-color: #999;
+  cursor: se-resize;
+}
+
+/*============ CONTEXT MENU =============*/
+
+.context-menu {
+  position: absolute;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px;
+  z-index: 100;
+}
+
+.context-menu label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: small;
+  font-weight: bold;
+}
+
+.context-menu input {
+  width: 90%;
+  padding: 2px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.context-menu select {
+  width: 90%;
+  padding: 2px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.context-menu button {
+  padding: 5px 10px;
+  border-radius: 10%;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+}
+
+/* ================================= */
+
+.right-click-menu {
+  position: absolute;
+  width: 550px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: none;
+  z-index: 100;
+}
+
+.right-click-menu.show {
+  display: block;
+}
+
+.right-click-menu .columns {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+}
+
+.right-click-menu .column {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.right-click-menu label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: small;
+  font-weight: bold;
+}
+
+.right-click-menu input {
+  width: 90%;
+  padding: 2px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.right-click-menu button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border-radius: 10%;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+}
+
+/*============ BUTTON =============*/
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.deploy-button {
+  margin-top: 1%;
+  margin-bottom: 2%;
+  margin-right: 2%;
+  padding: 10px 20px 10px 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #363434;
+  display: inline-block;
+  border-radius: 8px;
+  background-color: white;
+  transition-duration: 0.2s;
+}
+
+.deploy-button:hover {
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+  background-color: #4CAF50; /* Green */
+  color: white;
+  cursor: pointer;
+}
+
+.destroy-button {
+  margin-top: 1%;
+  margin-bottom: 2%;
+  margin-left: 2%;
+  padding: 10px 20px 10px 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #363434;
+  display: inline-block;
+  border-radius: 8px;
+  background-color: white;
+  transition-duration: 0.2s;
+}
+
+.destroy-button:hover {
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+  background-color: #d83843; 
+  color: white;
+  cursor: pointer;
+}
