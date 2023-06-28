@@ -161,43 +161,45 @@ public class MyAwsStack extends TerraformStack {
 
                                     if(!vpcs.get(k).getSgs().isEmpty()){
 
-                                        for (int sgLoopIndex=0; sgLoopIndex<sgs.size(); sgLoopIndex++){
+                                        for (int sgLoopIndex=0; sgLoopIndex<vpcs.get(k).getSgs().size(); sgLoopIndex++){
 
                                             for( SG tempSg: sgs) {
 
                                                 if (tempSg.getName().equals(vpcs.get(k).getSgs().get(sgLoopIndex).getName())) {
 
-                                                    List<SgRule> ingressRulesList = new ArrayList<>();
+                                                        List<SgRule> ingressRulesList = new ArrayList<>();
 
-                                                    securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-SG-" + sgLoopIndex + k)
-                                                            .vpcId(vpcDeployment.getId())
-                                                            .egress(List.of(
-                                                                    SecurityGroupEgress.builder()
-                                                                            .fromPort(0)
-                                                                            .toPort(0)
-                                                                            .protocol("-1")
-                                                                            .cidrBlocks(List.of("0.0.0.0/0"))
-                                                                            .ipv6CidrBlocks(List.of("::/0")).build()
-                                                            ))
-                                                            .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + tempSg.getName()))
-                                                            .provider(provider)
-                                                            .build();
+                                                        securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-SG-" + sgLoopIndex + k)
+                                                                .vpcId(vpcDeployment.getId())
+                                                                .egress(List.of(
+                                                                        SecurityGroupEgress.builder()
+                                                                                .fromPort(0)
+                                                                                .toPort(0)
+                                                                                .protocol("-1")
+                                                                                .cidrBlocks(List.of("0.0.0.0/0"))
+                                                                                .ipv6CidrBlocks(List.of("::/0")).build()
+                                                                ))
+                                                                .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + tempSg.getName()))
+                                                                .provider(provider)
+                                                                .build();
 
-                                                    for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
-                                                        SgRule rule = new SgRule();
-                                                        rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
-                                                        rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
-                                                        ingressRulesList.add(rule);
+                                                        for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
+                                                            SgRule rule = new SgRule();
+                                                            rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
+                                                            rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
+                                                            ingressRulesList.add(rule);
+                                                        }
+
+                                                        ingressRulesMap.put(securityGroup, ingressRulesList);
+                                                        securityGroupList.add(securityGroup);
+
+                                                        for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
+                                                            sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
+                                                        }
                                                     }
 
-                                                    ingressRulesMap.put(securityGroup, ingressRulesList);
-                                                    securityGroupList.add(securityGroup);
 
-                                                    for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
-                                                        sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
-                                                    }
-                                                }
                                             }
                                         }
 

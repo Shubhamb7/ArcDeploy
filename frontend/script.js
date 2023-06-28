@@ -560,29 +560,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://52.53.231.141:8080/arc';
+    const url = 'http://54.183.143.32:8080/arc';
 
-  trackButton.disabled = true;
-  trackButton.textContent = 'Deploying...';
+    trackButton.disabled = true;
+    trackButton.textContent = 'Deploying...';
 
-  fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: json
-  })
-    .then(response => response.json())
-    .then(result => {
-      console.log('Response:', result);
-      trackButton.disabled = false;
-      trackButton.textContent = 'Deploy';
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: json
     })
-    .catch(error => {
-      console.error('Error:', error);
-      trackButton.disabled = false;
-      trackButton.textContent = 'Deploy';
-    });
+      .then(response => response.json())
+      .then(result => {
+        console.log('Response:', result);
+        trackButton.disabled = false;
+        trackButton.textContent = 'Deploy';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        trackButton.disabled = false;
+        trackButton.textContent = 'Deploy';
+      });
     
   });
 
@@ -591,29 +591,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://52.53.231.141:8080/arc';
+    const url = 'http://54.183.143.32:8080/arc';
 
     destroyButton.disabled = true;
     destroyButton.textContent = 'Destroying...';
 
-  fetch(url, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: json
-  })
-    .then(response => response.json())
-    .then(result => {
-      console.log('Response:', result);
-      destroyButton.disabled = false;
-      destroyButton.textContent = 'Destroy';
+    fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: json
     })
-    .catch(error => {
-      console.error('Error:', error);
-      destroyButton.disabled = false;
-      destroyButton.textContent = 'Destroy';
-    });
+      .then(response => response.json())
+      .then(result => {
+        console.log('Response:', result);
+        destroyButton.disabled = false;
+        destroyButton.textContent = 'Destroy';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        destroyButton.disabled = false;
+        destroyButton.textContent = 'Destroy';
+      });
     
   });
 
