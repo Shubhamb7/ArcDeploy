@@ -11,10 +11,10 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 @ToString
-public class AwsCloud extends Region{
-    protected String acId;
-    protected String accessKey;
-    protected String secretKey;
+public class AwsCloud {
+    private String acId;
+    private String accessKey;
+    private String secretKey;
     private String projectName;
     private List<Region> regions;
 }

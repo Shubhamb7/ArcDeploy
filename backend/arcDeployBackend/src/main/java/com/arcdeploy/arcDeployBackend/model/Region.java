@@ -11,9 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class Region extends Vpc{
-    protected String name;
-    protected String type;
-    protected String regionName;
+public class Region {
+    private String name;
+    private String type;
+    private String regionName;
     private List<Vpc> vpcs;
 }

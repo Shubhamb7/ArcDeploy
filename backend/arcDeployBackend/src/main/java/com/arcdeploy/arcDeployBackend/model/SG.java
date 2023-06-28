@@ -12,8 +12,8 @@ import java.util.List;
 @Data
 @ToString
 public class SG {
-    protected String name;
-    protected String type;
+    private String name;
+    private String type;
     private List<SgRule> SgRules;
     private List<Ec2> instances;
 }

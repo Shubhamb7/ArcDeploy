@@ -11,11 +11,11 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class Vpc extends Subnet{
-    protected String name;
-    protected String type;
-    protected String cidr;
-    protected Boolean igw;
+public class Vpc{
+    private String name;
+    private String type;
+    private String cidr;
+    private Boolean igw;
     private List<Subnet> subnets;
     private List<SG> sgs;
 }

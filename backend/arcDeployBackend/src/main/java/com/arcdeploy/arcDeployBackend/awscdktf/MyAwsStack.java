@@ -19,7 +19,6 @@ import com.hashicorp.cdktf.providers.aws.provider.AwsProviderConfig;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroup;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroupEgress;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroupIngress;
-import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroupIngressList;
 import software.constructs.Construct;
 
 import java.util.ArrayList;
@@ -127,9 +126,10 @@ public class MyAwsStack extends TerraformStack {
                             NatGateway natGateway;
                             RouteTable publicRouteTable = null;
                             RouteTable privateRouteTable = null;
-
                             SecurityGroup securityGroup = null;
+                            List<SecurityGroup> securityGroupList = new ArrayList<>();
                             Map<String, String> sgMap = new HashMap<>();
+                            Map<SecurityGroup,List<SgRule>> ingressRulesMap = new HashMap<>();
 
                             for (Vpc tempVpc: regions.get(j).getVpcs()){
 
@@ -167,7 +167,8 @@ public class MyAwsStack extends TerraformStack {
 
                                                 if (tempSg.getName().equals(vpcs.get(k).getSgs().get(sgLoopIndex).getName())) {
 
-                                                    List<SecurityGroupIngress> ingressRulesList = new ArrayList<>();
+                                                    List<SgRule> ingressRulesList = new ArrayList<>();
+
                                                     securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-SG-" + sgLoopIndex + k)
                                                             .vpcId(vpcDeployment.getId())
                                                             .egress(List.of(
@@ -184,23 +185,47 @@ public class MyAwsStack extends TerraformStack {
                                                             .build();
 
                                                     for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
-                                                        SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
-                                                                .fromPort(Integer.parseInt(tempSg.getSgRules().get(sgRuleIndex).getPort()))
-                                                                .toPort(Integer.parseInt(tempSg.getSgRules().get(sgRuleIndex).getPort()))
-                                                                .protocol("tcp")
-                                                                .cidrBlocks(List.of(tempSg.getSgRules().get(sgRuleIndex).getSourceIp()))
-                                                                .build();
-                                                        ingressRulesList.add(tempIngress);
+                                                        SgRule rule = new SgRule();
+                                                        rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
+                                                        rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
+                                                        ingressRulesList.add(rule);
                                                     }
 
-                                                    securityGroup.putIngress(ingressRulesList);
+                                                    ingressRulesMap.put(securityGroup, ingressRulesList);
+                                                    securityGroupList.add(securityGroup);
 
-                                                    for (int instanceNameIndex =0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
+                                                    for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
                                                         sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
                                                     }
-
                                                 }
                                             }
+                                        }
+
+                                        for (SecurityGroup sg: securityGroupList){
+
+                                            List<SecurityGroupIngress> sgIngressList = new ArrayList<>();
+
+                                            for (SgRule ingressRule: ingressRulesMap.get(sg)){
+
+                                                if(ingressRule.getSourceIp().equals("0.0.0.0/0")){
+                                                    SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
+                                                            .fromPort(Integer.parseInt(ingressRule.getPort()))
+                                                            .toPort(Integer.parseInt(ingressRule.getPort()))
+                                                            .protocol("tcp")
+                                                            .cidrBlocks(List.of(ingressRule.getSourceIp()))
+                                                            .build();
+                                                    sgIngressList.add(tempIngress);
+                                                } else {
+                                                    SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
+                                                            .fromPort(Integer.parseInt(ingressRule.getPort()))
+                                                            .toPort(Integer.parseInt(ingressRule.getPort()))
+                                                            .protocol("tcp")
+                                                            .securityGroups(List.of(sgMap.get(ingressRule.getSourceIp())))
+                                                            .build();
+                                                    sgIngressList.add(tempIngress);
+                                                }
+                                            }
+                                            sg.putIngress(sgIngressList);
                                         }
                                     }
                                 }
@@ -372,8 +397,6 @@ public class MyAwsStack extends TerraformStack {
                                             }
                                         }
                                     }
-
-
                                 }
                             }
                         }

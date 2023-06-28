@@ -12,6 +12,6 @@ import java.util.List;
 @Data
 @ToString
 public class SgRule {
-    protected String port;
-    protected String sourceIp;
+    private String port;
+    private String sourceIp;
 }

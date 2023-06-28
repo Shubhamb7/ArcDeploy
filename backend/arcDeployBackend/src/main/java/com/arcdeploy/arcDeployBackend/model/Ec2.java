@@ -12,11 +12,11 @@ import java.util.List;
 @Data
 @ToString
 public class Ec2 {
-    protected String name;
-    protected String type;
-    protected String instanceType;
-    protected String operatingSystem;
-    protected String operatingSystemVersion;
-    protected String keyPair;
-    protected String ephemeralStorage;
+    private String name;
+    private String type;
+    private String instanceType;
+    private String operatingSystem;
+    private String operatingSystemVersion;
+    private String keyPair;
+    private String ephemeralStorage;
 }

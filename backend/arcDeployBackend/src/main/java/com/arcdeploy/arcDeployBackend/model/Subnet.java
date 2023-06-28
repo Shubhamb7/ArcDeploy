@@ -12,10 +12,10 @@ import java.util.List;
 @Data
 @ToString
 public class Subnet extends Ec2{
-    protected String name;
-    protected String type;
-    protected String availabilityZone;
-    protected String subnetCidr;
-    protected Boolean nat;
+    private String name;
+    private String type;
+    private String availabilityZone;
+    private String subnetCidr;
+    private Boolean nat;
     private List<Ec2> instances;
 }
