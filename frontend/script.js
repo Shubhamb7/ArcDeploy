@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let portsData = [];
     let sourceIpsData = [];
-    let destIpsData = [];
 
     diagramElement.addEventListener('contextmenu', (event) => {
       if (event.button === 2 && diagramElement.classList.contains('awscloud')) {
