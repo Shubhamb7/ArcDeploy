@@ -140,6 +140,7 @@ public class MyAwsStack extends TerraformStack {
                             SecurityGroup securityGroup = null;
                             List<SecurityGroup> securityGroupList = new ArrayList<>();
                             Map<String, String> sgMap = new HashMap<>();
+                            Map<String, String> sgIdMap = new HashMap<>();
                             Map<SecurityGroup,List<SgRule>> ingressRulesMap = new HashMap<>();
 
                             for (Vpc tempVpc: regions.get(j).getVpcs()){
@@ -151,22 +152,23 @@ public class MyAwsStack extends TerraformStack {
                                             .cidrBlock(vpcs.get(k).getCidr())
                                             .enableDnsHostnames(true)
                                             .enableDnsSupport(true)
-                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getName()))
+                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName()))
                                             .provider(provider)
                                             .build();
 
                                     if (vpcs.get(k).getIgw()) {
                                         igwDeployment = InternetGateway.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "IGW" + igwIndex)
                                                 .vpcId(vpcDeployment.getId())
-                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getName() + "-IGW"))
+                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-IGW"))
                                                 .provider(provider)
                                                 .build();
 
                                         publicRouteTable = RouteTable.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Public-Route-Table" + igwIndex)
                                                 .vpcId(vpcDeployment.getId())
+                                                .provider(provider)
                                                 .route(List.of(RouteTableRoute.builder().cidrBlock("0.0.0.0/0")
                                                         .gatewayId(igwDeployment.getId()).build()))
-                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-public-rt"))
+                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-public-rt"))
                                                 .build();
                                     }
 
@@ -190,8 +192,8 @@ public class MyAwsStack extends TerraformStack {
                                                                                 .cidrBlocks(List.of("0.0.0.0/0"))
                                                                                 .ipv6CidrBlocks(List.of("::/0")).build()
                                                                 ))
-                                                                .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
-                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + tempSg.getName()))
+                                                                .name(tempSg.getTagName() + "-" + awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
                                                                 .provider(provider)
                                                                 .build();
 
@@ -208,9 +210,9 @@ public class MyAwsStack extends TerraformStack {
                                                         for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
                                                             sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
                                                         }
-                                                    }
 
-
+                                                        sgIdMap.put(tempSg.getName(), securityGroup.getId());
+                                                }
                                             }
 
                                             sgIndex ++;
@@ -235,7 +237,7 @@ public class MyAwsStack extends TerraformStack {
                                                             .fromPort(Integer.parseInt(ingressRule.getPort()))
                                                             .toPort(Integer.parseInt(ingressRule.getPort()))
                                                             .protocol("tcp")
-                                                            .securityGroups(List.of(sgMap.get(ingressRule.getSourceIp())))
+                                                            .securityGroups(List.of(sgIdMap.get(ingressRule.getSourceIp())))
                                                             .build();
                                                     sgIngressList.add(tempIngress);
                                                 }
@@ -262,7 +264,7 @@ public class MyAwsStack extends TerraformStack {
                                                     .availabilityZone(subnets.get(l).getAvailabilityZone())
                                                     .vpcId(vpcDeployment.getId())
                                                     .mapPublicIpOnLaunch(true)
-                                                    .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + subnets.get(l).getName()))
+                                                    .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + subnets.get(l).getTagName()))
                                                     .provider(provider)
                                                     .build();
 
@@ -273,6 +275,7 @@ public class MyAwsStack extends TerraformStack {
 
                                             if (vpcs.get(k).getIgw() && publicRouteTable != null) {
                                                 RouteTableAssociation.Builder.create(this, subnets.get(l).getName() + "-" + vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Route-Table-Association-" + subnetIndex)
+                                                        .provider(provider)
                                                         .subnetId(subnetDeployment.getId())
                                                         .routeTableId(publicRouteTable.getId())
                                                         .build();
@@ -284,7 +287,7 @@ public class MyAwsStack extends TerraformStack {
                                                     .cidrBlock(subnets.get(l).getSubnetCidr())
                                                     .availabilityZone(subnets.get(l).getAvailabilityZone())
                                                     .vpcId(vpcDeployment.getId())
-                                                    .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + subnets.get(l).getName()))
+                                                    .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + subnets.get(l).getTagName()))
                                                     .provider(provider)
                                                     .build();
 
@@ -321,7 +324,7 @@ public class MyAwsStack extends TerraformStack {
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                                 .keyName(instances.get(m).getKeyPair())
-                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getName()))
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                                 .provider(provider)
                                                                 .build();
                                                     }
@@ -340,7 +343,7 @@ public class MyAwsStack extends TerraformStack {
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                                 .keyName(instances.get(m).getKeyPair())
-                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getName()))
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                                 .provider(provider)
                                                                 .build();
                                                     }
@@ -359,7 +362,7 @@ public class MyAwsStack extends TerraformStack {
                                                             .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                     .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                             .keyName(instances.get(m).getKeyPair())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getName()))
+                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                             .provider(provider)
                                                             .build();
                                                 }
@@ -375,19 +378,23 @@ public class MyAwsStack extends TerraformStack {
 
                             for(int l=0; l<publicSubnetList.size(); l++){
 
+                                Eip eip = Eip.Builder.create(this,vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Nat-Gateway-EIP-" + natIndex)
+                                        .vpc(true).provider(provider).build();
+
                                 natGateway = NatGateway.Builder.create(this,vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Nat-Gateway-" + natIndex)
-                                        .allocationId(Eip.Builder.create(this,vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Nat-Gateway-EIP-" + natIndex)
-                                                .vpc(true).build().getId())
+                                        .allocationId(eip.getId())
                                         .provider(provider)
                                         .subnetId(publicSubnetList.get(l).getId())
-                                        .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getName() + "-NGW-" + l))
+                                        .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-NGW-" + l))
                                         .build();
 
                                 privateRouteTable = RouteTable.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Private-Route-Table" + natIndex)
+                                        .provider(provider)
                                         .vpcId(vpcDeployment.getId())
                                         .route(List.of(RouteTableRoute.builder().cidrBlock("0.0.0.0/0")
-                                                .gatewayId(natGateway.getId()).build()))
-                                        .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-private-rt-" + l))
+                                                .gatewayId(natGateway.getId())
+                                                .build()))
+                                        .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-private-rt-" + l))
                                         .build();
 
                                 int routeIndex = 0;
@@ -405,6 +412,7 @@ public class MyAwsStack extends TerraformStack {
                                                     if(privateCidr.equals(privateSubnetCidrList.get(privateSubnetList.indexOf(privateSubnet)))) {
 
                                                         RouteTableAssociation.Builder.create(this, vpcs.get(k).getName() + "-" + vpcs.get(k).getCidr() + "-" + regions.get(j).getRegionName() + "-" + regions.get(j).getName() + "-" + awsClouds.get(i).getAcId() + "-" + "Private-Route-Table-Association" + routeIndex)
+                                                                .provider(provider)
                                                                 .subnetId(privateSubnet.getId())
                                                                 .routeTableId(privateRouteTable.getId())
                                                                 .build();

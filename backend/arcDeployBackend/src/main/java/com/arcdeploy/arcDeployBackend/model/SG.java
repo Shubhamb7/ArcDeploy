@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 public class SG {
     private String name;
+    private String tagName;
     private String type;
     private List<SgRule> SgRules;
     private List<Ec2> instances;

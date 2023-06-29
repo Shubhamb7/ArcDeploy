@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 public class Region {
     private String name;
+    private String tagName;
     private String type;
     private String regionName;
     private List<Vpc> vpcs;

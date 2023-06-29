@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 public class Ec2 {
     private String name;
+    private String tagName;
     private String type;
     private String instanceType;
     private String operatingSystem;

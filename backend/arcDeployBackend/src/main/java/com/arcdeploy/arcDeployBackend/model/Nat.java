@@ -12,6 +12,7 @@ import java.util.List;
 @Data
 @ToString
 public class Nat {
+    private String tagName;
     private String publicSubnetCidr;
     private List<String> privateSubnet;
 }

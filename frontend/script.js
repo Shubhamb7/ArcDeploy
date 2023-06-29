@@ -53,24 +53,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set the appropriate class based on the dropped diagram type
     if (diagramText === 'AWS Cloud') {
       diagramElement.classList.add('awscloud');
+      diagramElement.dataset.uuid = 'aws-' + generateUUID();
     } else if (diagramText === 'Region') {
       diagramElement.classList.add('region');
+      diagramElement.dataset.uuid = 'region-' + generateUUID();
     } else if (diagramText === 'VPC') {
       diagramElement.classList.add('vpc');
+      diagramElement.dataset.uuid = 'vpc-' + generateUUID();
     } else if (diagramText === 'IGW') {
       diagramElement.classList.add('igw');
+      diagramElement.dataset.uuid = 'igw-' + generateUUID();
     } else if (diagramText === 'NAT') {
       diagramElement.classList.add('nat');
+      diagramElement.dataset.uuid = 'nat-' + generateUUID();
     } else if (diagramText === 'Subnet') {
       diagramElement.classList.add('subnet');
+      diagramElement.dataset.uuid = 'subnet-' + generateUUID();
     } else if (diagramText === 'Private Subnet') {
       diagramElement.classList.add('privatesubnet');
-    } else if (diagramText === 'Region') {
-      diagramElement.classList.add('region');
+      diagramElement.dataset.uuid = 'psubnet-' + generateUUID();
     } else if (diagramText === 'EC2') {
       diagramElement.classList.add('ec2');
+      diagramElement.dataset.uuid = 'ec2-' + generateUUID();
     } else if (diagramText === 'SG') {
       diagramElement.classList.add('securitygroup');
+      diagramElement.dataset.uuid = 'sg-' + generateUUID();
     }
 
     diagramElement.textContent = diagramText;
@@ -146,6 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
     
+        const awsCloudUuid = diagramElement.dataset.uuid;
+        const awsCloudUuidLabel = document.createElement('label');
+        awsCloudUuidLabel.textContent = 'ID: ';
+        const awsCloudUuidInput = document.createElement('input');
+        awsCloudUuidInput.type = 'text';
+        awsCloudUuidInput.className = 'uuid-aws-account';
+        awsCloudUuidInput.value = awsCloudUuid;
+        awsCloudUuidInput.disabled = true;
+
         const acidLabel = document.createElement('label');
         acidLabel.textContent = 'Account ID:';
         const acidInput = document.createElement('input');
@@ -185,6 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
               closeContextMenu(); // Close the context menu after clicking OK
           });
     
+        contextMenu.appendChild(awsCloudUuidLabel);
+        contextMenu.appendChild(awsCloudUuidInput);
         contextMenu.appendChild(acidLabel);
         contextMenu.appendChild(acidInput);
         contextMenu.appendChild(accessKeyLabel);
@@ -207,6 +225,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.className = 'context-menu';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+
+        const regionUuid = diagramElement.dataset.uuid;
+        const regionUuidLabel = document.createElement('label');
+        regionUuidLabel.textContent = 'ID: ';
+        const regionUuidInput = document.createElement('input');
+        regionUuidInput.type = 'text';
+        regionUuidInput.className = 'uuid-aws-region';
+        regionUuidInput.value = regionUuid;
+        regionUuidInput.disabled = true;
     
         const awsRegionLabel = document.createElement('label');
         awsRegionLabel.textContent = 'AWS Region:';
@@ -223,6 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
               closeContextMenu(); // Close the context menu after clicking OK
           });
     
+        contextMenu.appendChild(regionUuidLabel);
+        contextMenu.appendChild(regionUuidInput);
         contextMenu.appendChild(awsRegionLabel);
         contextMenu.appendChild(awsRegionInput);
         contextMenu.appendChild(okButton);
@@ -238,6 +267,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.className = 'context-menu';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+
+        const vpcUuid = diagramElement.dataset.uuid;
+        const vpcUuidLabel = document.createElement('label');
+        vpcUuidLabel.textContent = 'ID: ';
+        const vpcUuidInput = document.createElement('input');
+        vpcUuidInput.type = 'text';
+        vpcUuidInput.className = 'uuid-aws-vpc';
+        vpcUuidInput.value = vpcUuid;
+        vpcUuidInput.disabled = true;
     
         const cidrLabel = document.createElement('label');
         cidrLabel.textContent = 'CIDR:';
@@ -254,6 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
           closeContextMenu(); // Close the context menu after clicking OK
         });
     
+        contextMenu.appendChild(vpcUuidLabel);
+        contextMenu.appendChild(vpcUuidInput);
         contextMenu.appendChild(cidrLabel);
         contextMenu.appendChild(cidrInput);
         contextMenu.appendChild(okButton);
@@ -271,6 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.className = 'context-menu';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+
+        const subnetUuid = diagramElement.dataset.uuid;
+        const subnetUuidLabel = document.createElement('label');
+        subnetUuidLabel.textContent = 'ID: ';
+        const subnetUuidInput = document.createElement('input');
+        subnetUuidInput.type = 'text';
+        subnetUuidInput.className = 'uuid-aws-subnet';
+        subnetUuidInput.value = subnetUuid;
+        subnetUuidInput.disabled = true;
     
         const availabilityZoneLabel = document.createElement('label');
         availabilityZoneLabel.textContent = 'Availability Zone:';
@@ -295,6 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
             closeContextMenu(); // Close the context menu after clicking OK
         });
     
+        contextMenu.appendChild(subnetUuidLabel);
+        contextMenu.appendChild(subnetUuidInput);
         contextMenu.appendChild(availabilityZoneLabel);
         contextMenu.appendChild(availabilityZoneInput);
         contextMenu.appendChild(subnetCidrLabel);
@@ -313,6 +364,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.className = 'context-menu';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+
+        const natUuid = diagramElement.dataset.uuid;
+        const natUuidLabel = document.createElement('label');
+        natUuidLabel.textContent = 'ID: ';
+        const natUuidInput = document.createElement('input');
+        natUuidInput.type = 'text';
+        natUuidInput.className = 'uuid-aws-nat';
+        natUuidInput.value = natUuid;
+        natUuidInput.disabled = true;
     
         const natLabel = document.createElement('label');
         natLabel.textContent = 'Private Subnet Cidrs:';
@@ -329,6 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
               closeContextMenu(); // Close the context menu after clicking OK
           });
 
+        contextMenu.appendChild(natUuidLabel);
+        contextMenu.appendChild(natUuidInput);
         contextMenu.appendChild(natLabel);
         contextMenu.appendChild(natInput);
         contextMenu.appendChild(okButton);
@@ -346,6 +408,17 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
         contextMenu.classList.add("show");
+
+        const sgUuid = diagramElement.dataset.uuid;
+        const sgUuidLabel = document.createElement('label');
+        sgUuidLabel.textContent = 'ID: ';
+        const sgUuidInput = document.createElement('input');
+        sgUuidInput.type = 'text';
+        sgUuidInput.className = 'uuid-aws-sg';
+        sgUuidInput.value = sgUuid;
+        sgUuidInput.disabled = true;
+        contextMenu.appendChild(sgUuidLabel);
+        contextMenu.appendChild(sgUuidInput);
         
         const columnsDiv = document.createElement("div");
         columnsDiv.classList.add("columns");
@@ -456,6 +529,15 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
 
+        const ec2Uuid = diagramElement.dataset.uuid;
+        const ec2UuidLabel = document.createElement('label');
+        ec2UuidLabel.textContent = 'ID: ';
+        const ec2UuidInput = document.createElement('input');
+        ec2UuidInput.type = 'text';
+        ec2UuidInput.className = 'uuid-aws-ec2';
+        ec2UuidInput.value = ec2Uuid;
+        ec2UuidInput.disabled = true;
+
         const keyPairLabel = document.createElement('label');
         keyPairLabel.textContent = 'Key Pair Name:';
         const keyPairInput = document.createElement('input');
@@ -535,6 +617,8 @@ document.addEventListener('DOMContentLoaded', () => {
           closeContextMenu(); // Close the context menu after clicking OK
         });
 
+        contextMenu.appendChild(ec2UuidLabel);
+        contextMenu.appendChild(ec2UuidInput);
         contextMenu.appendChild(instanceTypeLabel);
         contextMenu.appendChild(instanceTypeInput);
         contextMenu.appendChild(operatingSystemLabel);
@@ -559,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://54.183.143.32:8080/arc';
+    const url = 'http://54.177.104.140:8080/arc';
 
     trackButton.disabled = true;
     trackButton.textContent = 'Deploying...';
@@ -590,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://54.183.143.32:8080/arc';
+    const url = 'http://54.177.104.140:8080/arc';
 
     destroyButton.disabled = true;
     destroyButton.textContent = 'Destroying...';
@@ -628,7 +712,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const instances = [];
   
     children.forEach(child => {
-      const name = child.textContent.trim();
+      const name = child.dataset.uuid;
+      const tagName = child.textContent.trim();
       const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : null;
       const { left, top, width, height } = child.getBoundingClientRect();
 
@@ -641,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         instances.push({
           name,
+          tagName,
           type,
           instanceType,
           operatingSystem,
@@ -660,7 +746,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(ec2 => ({
-            name: ec2.textContent.trim(),
+            name: ec2.dataset.uuid,
+            tagName: ec2.textContent.trim(),
             type: 'EC2',
             instanceType: ec2.dataset.instanceType || '',
             operatingSystem: ec2.dataset.operatingSystem || '',
@@ -671,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         const securityGroup = {
           name,
+          tagName,
           type,
           sgRules,
           instances
@@ -686,6 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         const subnet = {
           name,
+          tagName,
           type,
           availabilityZone,
           subnetCidr,
@@ -709,6 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
               return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
                 childTop >= top && childTop + c.offsetHeight <= top + height;
             }).map(natele => ({
+              name: natele.dataset.uuid,
               publicSubnetCidr: subnetCidr,
               privateSubnet: natele.dataset.natSubnet.split(',') || [],
             }));
@@ -723,7 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(ec2 => ({
-            name: ec2.textContent.trim(),
+            name: ec2.dataset.uuid,
+            tagName: ec2.textContent.trim(),
             type: 'EC2',
             instanceType: ec2.dataset.instanceType || '',
             operatingSystem: ec2.dataset.operatingSystem || '',
@@ -743,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const subnet = {
           name,
+          tagName,
           type,
           availabilityZone,
           subnetCidr,
@@ -758,7 +850,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(ec2 => ({
-            name: ec2.textContent.trim(),
+            name: ec2.dataset.uuid,
+            tagName: ec2.textContent.trim(),
             type: 'EC2',
             instanceType: ec2.dataset.instanceType || '',
             operatingSystem: ec2.dataset.operatingSystem || '',
@@ -778,6 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const vpc = {
           name,
+          tagName,
           type,
           cidr,
           igw,
@@ -800,7 +894,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(subnet => ({
-            name: subnet.textContent.trim(),
+            name: subnet.dataset.uuid,
+            tagName: subnet.textContent.trim(),
             type: subnet.classList.contains('privatesubnet') ? 'PrivateSubnet' : 'Subnet',
             availabilityZone: subnet.dataset.availabilityZone || '',
             subnetCidr: subnet.dataset.subnetCidr || '',
@@ -816,7 +911,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(sg => ({
-            name: sg.textContent.trim(),
+            name: sg.dataset.uuid,
+            tagName: sg.textContent.trim(),
             type: 'SG',
             sgRules: sg.sgRules || [],
             instances: []
@@ -832,6 +928,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
         const regionObj = {
           name,
+          tagName,
+          tagName,
           type,
           regionName,
           vpcs: []
@@ -845,7 +943,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(vpc => ({
-            name: vpc.textContent.trim(),
+            name: vpc.dataset.uuid,
+            tagName: vpc.textContent.trim(),
             type: 'VPC',
             cidr: vpc.dataset.cidr || '',
             igw: null,
@@ -878,7 +977,8 @@ document.addEventListener('DOMContentLoaded', () => {
               childTop >= top && childTop + c.offsetHeight <= top + height;
           })
           .map(region => ({
-            name: region.textContent.trim(),
+            name: region.dataset.uuid,
+            tagName: region.textContent.trim(),
             type: 'Region',
             regionName: region.dataset.regionName || '',
             vpcs: []
@@ -906,5 +1006,12 @@ document.addEventListener('DOMContentLoaded', () => {
       contextMenu.remove();
       contextMenu = null;
     }
+  }
+
+  function generateUUID() {
+    const array = new Uint8Array(10);
+    window.crypto.getRandomValues(array);
+    const base64 = btoa(String.fromCharCode.apply(null, array));
+    return base64.replace(/[\+/=]/g, '');
   }
 });

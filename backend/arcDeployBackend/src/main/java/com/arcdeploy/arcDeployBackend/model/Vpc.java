@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 public class Vpc{
     private String name;
+    private String tagName;
     private String type;
     private String cidr;
     private Boolean igw;
