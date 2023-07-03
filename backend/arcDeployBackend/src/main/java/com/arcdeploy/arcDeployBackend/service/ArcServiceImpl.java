@@ -6,6 +6,7 @@ import com.arcdeploy.arcDeployBackend.model.*;
 import com.hashicorp.cdktf.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ArcServiceImpl implements ArcService {
@@ -95,7 +97,7 @@ public class ArcServiceImpl implements ArcService {
     }
 
     @Override
-    public JSONObject deleteArc(ArcDto arcDto) {
+    public Map<String,String> deleteArc(ArcDto arcDto) {
 
         String arcName = arcDto.getArc().replaceAll("\\s", "").toLowerCase();
         List<AwsCloud> awsCloud = arcDto.getAws();
@@ -176,15 +178,15 @@ public class ArcServiceImpl implements ArcService {
                     int exitCode5 = removeCdktfProcess.waitFor();
                     System.out.println("Docker cdktf removal exited with code: " + exitCode5 + "\n");
 
-                    return new JSONObject().put("status", "Deleted");
+                    return Map.of("message", "Deleted");
                 }
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return new JSONObject().put("status", "Not Deleted");
+        return Map.of("message", "Error Deleting the Architecture");
 
     }
 
