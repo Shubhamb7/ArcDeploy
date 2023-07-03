@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 @ToString
 public class ArcDto {
+    private String arc;
     private List<AwsCloud> aws;
     private List<Region> regions;
     private List<Vpc> vpcs;

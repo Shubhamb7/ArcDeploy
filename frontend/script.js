@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         secretKeyInput.value = secretkey;
 
         const projectLabel = document.createElement('label');
-        projectLabel.textContent = 'Project Name:';
+        projectLabel.textContent = 'Project/Environment Name:';
         const projectInput = document.createElement('input');
         projectInput.type = 'text';
         projectInput.className = 'input-aws-project';
@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://54.177.104.140:8080/arc';
+    const url = 'http://54.176.126.43:8080/arc';
 
     trackButton.disabled = true;
     trackButton.textContent = 'Deploying...';
@@ -674,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hierarchy = generateHierarchy(drawingArea);
     const json = JSON.stringify(hierarchy, null, 2);
     console.log(json);
-    const url = 'http://54.177.104.140:8080/arc';
+    const url = 'http://54.176.126.43:8080/arc';
 
     destroyButton.disabled = true;
     destroyButton.textContent = 'Destroying...';
@@ -703,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function generateHierarchy(element) {
     const children = Array.from(element.childNodes).filter(child => child.nodeType === Node.ELEMENT_NODE);
+    const arc = document.getElementById('arcNameInput').value;;
     const aws = [];
     const regions = [];
     const vpcs = [];
@@ -991,6 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     return {
+      arc,
       aws,
       regions,
       vpcs,

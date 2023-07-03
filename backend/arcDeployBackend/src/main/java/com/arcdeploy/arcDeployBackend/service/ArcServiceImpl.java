@@ -27,16 +27,17 @@ public class ArcServiceImpl implements ArcService {
 
         arcDtosList.add(arcDto);
 
+        String arcName = arcDto.getArc().replaceAll("\\s", "").toLowerCase();
         List<AwsCloud> awsCloud = arcDto.getAws();
 
         App app = new App();
-        MyAwsStack awsStack = new MyAwsStack(app, awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId(), arcDto);
+        MyAwsStack awsStack = new MyAwsStack(app, awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), arcDto);
         awsStack.toTerraform();
         app.synth();
 
         String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:latest\n" +
                 "WORKDIR /home/ubuntu/app\n" +
-                "COPY cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() + "/cdk.tf.json /home/ubuntu/app/.\n" +
+                "COPY cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + "/cdk.tf.json /home/ubuntu/app/.\n" +
                 "RUN terraform init\n" +
                 "RUN terraform apply --auto-approve\n" +
                 "RUN git clone -b master https://Shubhamb7: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@github.com/Shubhamb7/terraform-states-manage.git\n" +
@@ -44,15 +45,15 @@ public class ArcServiceImpl implements ArcService {
                 "RUN git init\n" +
                 "RUN git config --global user.email shubhamb756@gmail.com\n" +
                 "RUN git config --global user.name Shubhamb7\n" +
-                "RUN git checkout -b " + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() +
-                "\nRUN mv ../terraform." + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() + ".tfstate ./\n" +
+                "RUN git checkout -b " + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() +
+                "\nRUN mv ../terraform." + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + ".tfstate ./\n" +
                 "RUN mv ../cdk.tf.json ./\n" +
                 "RUN git add .\n" +
-                "RUN git commit -m \""+ awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() + "\"\n" +
-                "RUN git push origin "+ awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId();
+                "RUN git commit -m \""+ awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + "\"\n" +
+                "RUN git push origin "+ awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId();
 
         // Specify the path where the Dockerfile will be created
-        Path dockerfilePath = Path.of("/home/ubuntu/app/Dockerfile-" + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId());
+        Path dockerfilePath = Path.of("/home/ubuntu/app/Dockerfile-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
         Files.createDirectories(dockerfilePath.getParent());
 
         ProcessBuilder pruneProcessBuilder = new ProcessBuilder("docker", "builder", "prune", "--all", "--force");
@@ -64,7 +65,7 @@ public class ArcServiceImpl implements ArcService {
         // Write the content to the Dockerfile
         Files.writeString(dockerfilePath, dockerfileContent, StandardOpenOption.CREATE);
         // Build the Docker image
-        ProcessBuilder imageBuildBuilder = new ProcessBuilder("docker", "build", "-t", awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
+        ProcessBuilder imageBuildBuilder = new ProcessBuilder("docker", "build", "-t", awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
         imageBuildBuilder.directory(dockerfilePath.getParent().toFile());
         Process imageBuildProcess = imageBuildBuilder.start();
         int exitCode2 = imageBuildProcess.waitFor();
@@ -72,7 +73,7 @@ public class ArcServiceImpl implements ArcService {
 
         Files.deleteIfExists(dockerfilePath);
 
-        ProcessBuilder imageRemoveProcessBuilder = new ProcessBuilder("docker", "rmi", "-f", awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId());
+        ProcessBuilder imageRemoveProcessBuilder = new ProcessBuilder("docker", "rmi", "-f", awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
         imageRemoveProcessBuilder.directory(dockerfilePath.getParent().toFile());
         Process imageRemoveProcess = imageRemoveProcessBuilder.start();
         int exitCode3 = imageRemoveProcess.waitFor();
@@ -96,6 +97,7 @@ public class ArcServiceImpl implements ArcService {
     @Override
     public JSONObject deleteArc(ArcDto arcDto) {
 
+        String arcName = arcDto.getArc().replaceAll("\\s", "").toLowerCase();
         List<AwsCloud> awsCloud = arcDto.getAws();
         String owner = "Shubhamb7";
         String repo = "terraform-states-manage";
@@ -118,12 +120,12 @@ public class ArcServiceImpl implements ArcService {
             }
 
             for(String name: branchNames) {
-                if (name.equals(awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId())) {
+                if (name.equals(awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId())) {
 
                     String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:latest\n" +
                             "WORKDIR /home/ubuntu/app\n" +
-                            "RUN git clone -b " + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() + " https://Shubhamb7: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@github.com/Shubhamb7/terraform-states-manage.git\n" +
-                            "RUN mv terraform-states-manage/terraform."+ awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId() +".tfstate ./\n" +
+                            "RUN git clone -b " + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + " https://Shubhamb7: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@github.com/Shubhamb7/terraform-states-manage.git\n" +
+                            "RUN mv terraform-states-manage/terraform."+ awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() +".tfstate ./\n" +
                             "RUN mv terraform-states-manage/cdk.tf.json ./\n" +
                             "RUN terraform init \n" +
                             "RUN terraform destroy --auto-approve \n" +
@@ -132,10 +134,10 @@ public class ArcServiceImpl implements ArcService {
                             "RUN git checkout master\n" +
                             "RUN git config --global user.email shubhamb756@gmail.com\n" +
                             "RUN git config --global user.name Shubhamb7\n" +
-                            "RUN git push origin --delete " + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId();
+                            "RUN git push origin --delete " + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId();
     
                     // Specify the path where the Dockerfile will be created
-                    Path dockerfilePath = Path.of("/home/ubuntu/app/DockerfileDelete-" + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId());
+                    Path dockerfilePath = Path.of("/home/ubuntu/app/DockerfileDelete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
                     Files.createDirectories(dockerfilePath.getParent());
 
                     // Write the content to the Dockerfile
@@ -148,7 +150,7 @@ public class ArcServiceImpl implements ArcService {
                     System.out.println("Docker prune builder exited with code: " + exitCode1 + "\n");
 
                     // Build the Docker image
-                    ProcessBuilder processBuilder = new ProcessBuilder("docker", "build", "-t", "delete-" + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
+                    ProcessBuilder processBuilder = new ProcessBuilder("docker", "build", "-t", "delete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
                     processBuilder.directory(dockerfilePath.getParent().toFile());
                     Process dockerRunProcess = processBuilder.start();
                     int exitCode2 = dockerRunProcess.waitFor();
@@ -156,7 +158,7 @@ public class ArcServiceImpl implements ArcService {
 
                     Files.deleteIfExists(dockerfilePath);
 
-                    ProcessBuilder imageRemoveBuilder = new ProcessBuilder("docker", "rmi", "-f", "delete-" + awsCloud.get(0).getProjectName() + "-" +  awsCloud.get(0).getAcId());
+                    ProcessBuilder imageRemoveBuilder = new ProcessBuilder("docker", "rmi", "-f", "delete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
                     imageRemoveBuilder.directory(dockerfilePath.getParent().toFile());
                     Process imageRemoveProcess = imageRemoveBuilder.start();
                     int exitCode3 = imageRemoveProcess.waitFor();
@@ -184,6 +186,12 @@ public class ArcServiceImpl implements ArcService {
 
         return new JSONObject().put("status", "Not Deleted");
 
+    }
+
+    @Override
+    public ArcDto updateArc(ArcDto arcDto) throws IOException, InterruptedException {
+
+        return null;
     }
 
     @Override

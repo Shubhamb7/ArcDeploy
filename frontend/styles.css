@@ -1,10 +1,23 @@
 .containerbox {
-
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 .nav-link.active {
   font-weight: bold;
+}
+
+.arcNameInput {
+  width: 60%;
+  padding: 2px;
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: medium;
+  font-weight: bold;
+  text-align: center;
+  border: white;
 }
 /*============ TOOLBOX =============*/
 
@@ -98,6 +111,7 @@
   position: relative;
   z-index: 2;
   transition: margin-left 0.3s ease-in-out;
+  overflow: auto;
 }
 .drawing-area.shift-left {
   margin-left: 170px;
@@ -313,10 +327,10 @@
 }
 
 .deploy-button {
-  margin-top: 1%;
-  margin-bottom: 2%;
-  margin-right: 2%;
-  padding: 10px 20px 10px 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 20px;
+  padding: 5px 10px 5px 10px;
   text-align: center;
   font-weight: bold;
   color: #363434;
@@ -326,7 +340,7 @@
   transition-duration: 0.2s;
 }
 
-.deploy-button:hover {
+.deploy-button:hover{
   box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
   background-color: #4CAF50; /* Green */
   color: white;
@@ -334,10 +348,10 @@
 }
 
 .destroy-button {
-  margin-top: 1%;
-  margin-bottom: 2%;
-  margin-left: 2%;
-  padding: 10px 20px 10px 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 20px;
+  padding: 5px 10px 5px 10px;
   text-align: center;
   font-weight: bold;
   color: #363434;
