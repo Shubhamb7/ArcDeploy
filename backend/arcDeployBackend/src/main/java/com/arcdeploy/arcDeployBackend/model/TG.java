@@ -11,13 +11,12 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class Vpc{
+public class TG {
     private String name;
     private String tagName;
     private String type;
-    private String cidr;
-    private Boolean igw;
-    private List<Subnet> subnets;
-    private List<SG> sgs;
-    private List<TG> tgs;
+    private String protocol;
+    private String protocolVer;
+    private String port;
+    private List<Ec2> instances;
 }

@@ -20,5 +20,6 @@ public class ArcDto {
     private List<Subnet> subnets;
     private List<Nat> nats;
     private List<SG> sgs;
+    private List<TG> tgs;
     private List<Ec2> instances;
 }

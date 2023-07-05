@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (diagramText === 'SG') {
       diagramElement.classList.add('securitygroup');
       diagramElement.dataset.uuid = 'sg-' + generateUUID();
+    } else if (diagramText === 'TG') {
+      diagramElement.classList.add('targetgrp');
+      diagramElement.dataset.uuid = 'tg-' + generateUUID();
     }
 
     diagramElement.textContent = diagramText;
@@ -632,7 +635,129 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.appendChild(okButton);
 
         document.body.appendChild(contextMenu);
-      } 
+      } else if (event.button === 2 && diagramElement.classList.contains('targetgrp')) {
+        event.preventDefault();
+        closeContextMenu(); // Close any existing context menu
+    
+        const diagramElement = event.target;
+        let tgInstances = diagramElement.tgInstances || [];
+        const tgName = diagramElement.dataset.tgName || 'TG1';
+        const tgProtocol = diagramElement.dataset.tgProtocol || '';
+        const tgPort = diagramElement.dataset.tgPort || '';
+        const tgProtocolVer = diagramElement.dataset.tgProtocolVer || '';
+    
+        contextMenu = document.createElement('div');
+        contextMenu.className = 'right-click-menu';
+        contextMenu.style.left = event.clientX + 'px';
+        contextMenu.style.top = event.clientY + 'px';
+        contextMenu.classList.add("show");
+
+        const tgUuid = diagramElement.dataset.uuid;
+        const tgUuidLabel = document.createElement('label');
+        tgUuidLabel.textContent = 'ID: ';
+        const tgUuidInput = document.createElement('input');
+        tgUuidInput.type = 'text';
+        tgUuidInput.className = 'uuid-aws-tg';
+        tgUuidInput.value = tgUuid;
+        tgUuidInput.disabled = true;
+
+        const tgNameLabel = document.createElement('label');
+        tgNameLabel.textContent = 'Target Group Name: ';
+        const tgNameInput = document.createElement('input');
+        tgNameInput.type = 'text';
+        tgNameInput.className = 'uuid-aws-tg';
+        tgNameInput.value = tgName;
+
+        const tgProtocolLabel = document.createElement('label');
+        tgProtocolLabel.textContent = 'Protocol: ';
+        const tgProtocolInput = document.createElement('select');
+        tgProtocolInput.className = 'input-tg-protocol';
+        const httpOption = document.createElement('option');
+        httpOption.value = 'HTTP';
+        httpOption.textContent = 'HTTP';
+        const httpsOption = document.createElement('option');
+        httpsOption.value = 'HTTPS';
+        httpsOption.textContent = 'HTTPS';
+        const tcpOption = document.createElement('option');
+        tcpOption.value = 'TCP';
+        tcpOption.textContent = 'TCP';
+        tgProtocolInput.appendChild(httpOption);
+        tgProtocolInput.appendChild(httpsOption);
+        tgProtocolInput.appendChild(tcpOption);
+        tgProtocolInput.value = tgProtocol;
+        tgProtocolInput.addEventListener('change', handleProtocolChange);
+
+        const tgPortLabel = document.createElement('label');
+        tgPortLabel.textContent = 'Port: ';
+        const tgPortInput = document.createElement('input');
+        tgPortInput.type = 'text';
+        tgPortInput.className = 'input-tg-port';
+        tgPortInput.value = tgPort;
+
+        const tgProtocolVersionLabel = document.createElement('label');
+        tgProtocolVersionLabel.textContent = 'Protocol Version: ';
+        const tgProtocolVersionInput = document.createElement('select');
+        tgProtocolVersionInput.className = 'input-tg-protocol-version';
+        const http1Option = document.createElement('option');
+        http1Option.value = 'HTTP1';
+        http1Option.textContent = 'HTTP1';
+        const http2Option = document.createElement('option');
+        http2Option.value = 'HTTP2';
+        http2Option.textContent = 'HTTP2';
+        const grpcOption = document.createElement('option');
+        grpcOption.value = 'gRPC';
+        grpcOption.textContent = 'gRPC';
+        tgProtocolVersionInput.appendChild(http1Option);
+        tgProtocolVersionInput.appendChild(http2Option);
+        tgProtocolVersionInput.appendChild(grpcOption);
+        tgProtocolVersionInput.value = tgProtocolVer;
+
+        if (tgProtocolInput.value === 'HTTP' || tgProtocolInput.value === 'HTTPS') {
+          tgProtocolVersionLabel.style.display = 'block';
+          tgProtocolVersionInput.style.display = 'block';
+        } else {
+          tgProtocolVersionLabel.style.display = 'none';
+          tgProtocolVersionInput.style.display = 'none';
+        }
+
+        const okButton = document.createElement('button');
+        okButton.textContent = 'OK';
+
+        contextMenu.appendChild(tgUuidLabel);
+        contextMenu.appendChild(tgUuidInput);
+        contextMenu.appendChild(tgNameLabel);
+        contextMenu.appendChild(tgNameInput);
+        contextMenu.appendChild(tgProtocolLabel);
+        contextMenu.appendChild(tgProtocolInput);
+        contextMenu.appendChild(tgProtocolVersionLabel);
+        contextMenu.appendChild(tgProtocolVersionInput);
+        contextMenu.appendChild(tgPortLabel);
+        contextMenu.appendChild(tgPortInput);
+        contextMenu.appendChild(okButton);
+        document.body.appendChild(contextMenu);
+    
+        okButton.addEventListener('click', () => {
+          diagramElement.dataset.tgName = tgNameInput.value;
+          diagramElement.dataset.tgProtocol = tgProtocolInput.value;
+          diagramElement.dataset.tgPort = tgPortInput.value;
+          diagramElement.dataset.tgProtocolVer = tgProtocolVersionInput.value;
+          closeContextMenu(); 
+        });
+
+        function handleProtocolChange() {
+          const selectedProtocol = tgProtocolInput.value;
+        
+          if (selectedProtocol === 'HTTP' || selectedProtocol === 'HTTPS') {
+            tgProtocolVersionInput.value = 'HTTP1';
+            tgProtocolVersionLabel.style.display = 'block';
+            tgProtocolVersionInput.style.display = 'block';
+          } else {
+            tgProtocolVersionInput.value = '';
+            tgProtocolVersionLabel.style.display = 'none';
+            tgProtocolVersionInput.style.display = 'none';
+          }
+        }
+      }
 
     });
     drawingArea.appendChild(diagramElement);
@@ -710,12 +835,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const subnets = [];
     const nats = [];
     const sgs = [];
+    const tgs = [];
     const instances = [];
   
     children.forEach(child => {
       const name = child.dataset.uuid;
       const tagName = child.textContent.trim();
-      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : null;
+      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : child.classList.contains('targetgrp') ? 'TG' : null;
       const { left, top, width, height } = child.getBoundingClientRect();
 
       if (type === 'EC2') {
@@ -766,6 +892,42 @@ document.addEventListener('DOMContentLoaded', () => {
         };
   
         sgs.push(securityGroup);
+      }
+
+      if (type === 'TG') {
+        const protocol = child.dataset.tgProtocol || '';
+        const port = child.dataset.tgPort || '';
+        const protocolVer = child.dataset.tgProtocolVer || '';
+
+        const instances = children
+          .filter(c => c.classList.contains('ec2'))
+          .filter(c => {
+            const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+            return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+              childTop >= top && childTop + c.offsetHeight <= top + height;
+          })
+          .map(ec2 => ({
+            name: ec2.dataset.uuid,
+            tagName: ec2.textContent.trim(),
+            type: 'EC2',
+            instanceType: ec2.dataset.instanceType || '',
+            operatingSystem: ec2.dataset.operatingSystem || '',
+            operatingSystemVersion: ec2.dataset.operatingSystemVersion || '',
+            keyPair: ec2.dataset.keyPair || '',
+            ephemeralStorage: ec2.dataset.ephemeralStorage || ''
+          }));
+  
+        const targetGroup = {
+          name,
+          tagName,
+          type,
+          protocol,
+          protocolVer,
+          port,
+          instances
+        };
+  
+        tgs.push(targetGroup);
       }
   
       if (type === 'Subnet') {
@@ -877,7 +1039,8 @@ document.addEventListener('DOMContentLoaded', () => {
           cidr,
           igw,
           subnets: [],
-          sgs: []
+          sgs: [],
+          tgs: []
         };
 
         children.filter(c => c.classList.contains('igw'))
@@ -919,8 +1082,26 @@ document.addEventListener('DOMContentLoaded', () => {
             instances: []
           }));
 
+          const vpctgs = children
+          .filter(c => c.classList.contains('targetgrp'))
+          .filter(c => {
+            const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+            return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+              childTop >= top && childTop + c.offsetHeight <= top + height;
+          })
+          .map(tg => ({
+            name: tg.dataset.uuid,
+            tagName: tg.textContent.trim(),
+            type: 'TG',
+            protocol: tg.dataset.tgProtocol || '',
+            protocolVer: tg.dataset.tgProtocolVer || '',
+            port: tg.dataset.tgPort || '',
+            instances: []
+          }));
+
         vpc.subnets.push(...vpcSubnets);
         vpc.sgs.push(...vpcsgs);
+        vpc.tgs.push(...vpctgs);
         vpcs.push(vpc);
       }
   
@@ -999,6 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subnets,
       nats,
       sgs,
+      tgs,
       instances
     };
   }

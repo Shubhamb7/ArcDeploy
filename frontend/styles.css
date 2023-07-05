@@ -92,6 +92,11 @@
   color: white;
 }
 
+.toolbox-item.targetgrp {
+  border: 1px solid #F58534;
+  background-color: transparent;
+}
+
 .toolbox-item:hover{
   box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
   border: 3px solid black;
@@ -215,6 +220,16 @@
   border: 2px solid #3b3a3d;
 }
 
+.diagram.targetgrp {
+  border: 1px solid #df7123;
+  background-color: transparent;
+  border-radius: 5px;
+  border-radius: 5px;
+}
+.diagram.targetgrp:hover {
+  border: 2px solid #3b3a3d;
+}
+
 .resize-handle {
   position: absolute;
   width: 10px;
@@ -266,7 +281,7 @@
   align-items: center;
 }
 
-/* ================================= */
+/* ============== SG RIGHT CLICK MENU =================== */
 
 .right-click-menu {
   position: absolute;
@@ -301,6 +316,13 @@
 }
 
 .right-click-menu input {
+  width: 90%;
+  padding: 2px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.right-click-menu select {
   width: 90%;
   padding: 2px;
   margin-bottom: 10px;

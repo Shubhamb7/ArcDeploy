@@ -4,6 +4,8 @@ import com.arcdeploy.arcDeployBackend.dto.ArcDto;
 import com.arcdeploy.arcDeployBackend.model.*;
 
 import com.hashicorp.cdktf.TerraformStack;
+import com.hashicorp.cdktf.providers.aws.alb_target_group.AlbTargetGroup;
+import com.hashicorp.cdktf.providers.aws.alb_target_group_attachment.AlbTargetGroupAttachment;
 import com.hashicorp.cdktf.providers.aws.eip.Eip;
 import com.hashicorp.cdktf.providers.aws.internet_gateway.InternetGateway;
 import com.hashicorp.cdktf.providers.aws.nat_gateway.NatGateway;
@@ -36,6 +38,7 @@ public class MyAwsStack extends TerraformStack {
         List<Subnet> subnets = arcDto.getSubnets();
         List<Nat> nats = arcDto.getNats();
         List<SG> sgs = arcDto.getSgs();
+        List<TG> tgs = arcDto.getTgs();
         List<Ec2> instances = arcDto.getInstances();
 
         int regionIndex = 0;
@@ -142,6 +145,9 @@ public class MyAwsStack extends TerraformStack {
                             Map<String, String> sgIdMap = new HashMap<>();
                             Map<SecurityGroup,List<SgRule>> ingressRulesMap = new HashMap<>();
 
+                            AlbTargetGroup tg = null;
+                            Map<String, AlbTargetGroup> tgMap = new HashMap<>();
+
                             for (Vpc tempVpc: regions.get(j).getVpcs()){
 
                                 if (tempVpc.getName().equals(vpcs.get(k).getName())
@@ -244,6 +250,31 @@ public class MyAwsStack extends TerraformStack {
                                             sg.putIngress(sgIngressList);
                                         }
                                     }
+
+                                    if(!vpcs.get(k).getTgs().isEmpty()){
+
+                                        for(int tgLoopIndex = 0; tgLoopIndex<vpcs.get(k).getTgs().size(); tgLoopIndex ++){
+
+                                            for(TG tempTg: tgs){
+
+                                                if(tempTg.getName().equals(vpcs.get(k).getTgs().get(tgLoopIndex).getName())){
+
+                                                    tg = AlbTargetGroup.Builder.create(this, tempTg.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
+                                                            .vpcId(vpcDeployment.getId())
+                                                            .port(Integer.parseInt(tempTg.getPort()))
+                                                            .protocol(tempTg.getProtocol())
+                                                            .protocolVersion(tempTg.getProtocolVer())
+                                                            .name(awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempTg.getTagName())
+                                                            .provider(provider)
+                                                            .build();
+
+                                                    for(Ec2 tempInstance: tempTg.getInstances()){
+                                                        tgMap.put(tempInstance.getName(),tg);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -313,7 +344,7 @@ public class MyAwsStack extends TerraformStack {
 
                                                     if (sgMap.containsKey(instances.get(m).getName())){
 
-                                                        Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                        Instance instanceDeployment = Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
                                                                 .instanceType(instances.get(m).getInstanceType())
                                                                 .ami(ubuntu2004AmiData.getId())
                                                                 .subnetId(subnetDeployment.getId())
@@ -326,13 +357,23 @@ public class MyAwsStack extends TerraformStack {
                                                                 .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                                 .provider(provider)
                                                                 .build();
+
+                                                        if(tgMap.containsKey(instances.get(m).getName())){
+                                                            AlbTargetGroup tempTg = tgMap.get(instances.get(m).getName());
+
+                                                            AlbTargetGroupAttachment.Builder.create(this,  tempTg.getTags().get("Name") + instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                                    .targetGroupArn(tempTg.getArn())
+                                                                    .targetId(instanceDeployment.getId())
+                                                                    .provider(provider)
+                                                                    .build();
+                                                        }
                                                     }
 
                                                 } else {
 
                                                     if (sgMap.containsKey(instances.get(m).getName())){
 
-                                                        Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                        Instance instanceDeployment = Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
                                                                 .instanceType(instances.get(m).getInstanceType())
                                                                 .ami(ubuntu2204AmiData.getId())
                                                                 .subnetId(subnetDeployment.getId())
@@ -345,13 +386,23 @@ public class MyAwsStack extends TerraformStack {
                                                                 .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                                 .provider(provider)
                                                                 .build();
+
+                                                        if(tgMap.containsKey(instances.get(m).getName())){
+                                                            AlbTargetGroup tempTg = tgMap.get(instances.get(m).getName());
+
+                                                            AlbTargetGroupAttachment.Builder.create(this,  tempTg.getTags().get("Name") + instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                                    .targetGroupArn(tempTg.getArn())
+                                                                    .targetId(instanceDeployment.getId())
+                                                                    .provider(provider)
+                                                                    .build();
+                                                        }
                                                     }
                                                 }
                                             } else {
 
                                                 if (sgMap.containsKey(instances.get(m).getName())){
 
-                                                    Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                    Instance instanceDeployment = Instance.Builder.create(this, instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
                                                             .instanceType(instances.get(m).getInstanceType())
                                                             .ami(debian11AmiData.getId())
                                                             .subnetId(subnetDeployment.getId())
@@ -364,6 +415,16 @@ public class MyAwsStack extends TerraformStack {
                                                             .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
                                                             .provider(provider)
                                                             .build();
+
+                                                    if(tgMap.containsKey(instances.get(m).getName())){
+                                                        AlbTargetGroup tempTg = tgMap.get(instances.get(m).getName());
+
+                                                        AlbTargetGroupAttachment.Builder.create(this,  tempTg.getTags().get("Name") + instances.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + instanceIndex)
+                                                                .targetGroupArn(tempTg.getArn())
+                                                                .targetId(instanceDeployment.getId())
+                                                                .provider(provider)
+                                                                .build();
+                                                    }
                                                 }
                                             }
                                         }
