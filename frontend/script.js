@@ -81,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (diagramText === 'TG') {
       diagramElement.classList.add('targetgrp');
       diagramElement.dataset.uuid = 'tg-' + generateUUID();
+    } else if (diagramText === 'ALB') {
+      diagramElement.classList.add('alb');
+      diagramElement.dataset.uuid = 'alb-' + generateUUID();
     }
 
     diagramElement.textContent = diagramText;
@@ -137,8 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
       isResizing = false;
     });
 
+    let protocolsData = [];
     let portsData = [];
     let sourceIpsData = [];
+    let albProtocolsData = [];
+    let albPortsData = [];
+    let albTargetIdsData = [];
 
     diagramElement.addEventListener('contextmenu', (event) => {
       if (event.button === 2 && diagramElement.classList.contains('awscloud')) {
@@ -427,6 +434,13 @@ document.addEventListener('DOMContentLoaded', () => {
         columnsDiv.classList.add("columns");
         contextMenu.appendChild(columnsDiv);
 
+        const protocolColumns = document.createElement("div");
+        protocolColumns.classList.add("column");
+        const protocolLabel = document.createElement("label");
+        protocolLabel.textContent = "Protocol";
+        protocolColumns.appendChild(protocolLabel);
+        columnsDiv.appendChild(protocolColumns);
+
         const portColumns = document.createElement("div");
         portColumns.classList.add("column");
         const portLabel = document.createElement("label");
@@ -449,6 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
         okButton.textContent = 'OK';
     
         okButton.addEventListener('click', () => {
+          const protocols = Array.from(document.querySelectorAll(".protocol-input")).map(
+            (input) => input.value
+          );
           const ports = Array.from(document.querySelectorAll(".port-input")).map(
             (input) => input.value
           );
@@ -457,18 +474,22 @@ document.addEventListener('DOMContentLoaded', () => {
           );
         
           const objectArray = [];
+          const newProtocolsData = [];
           const newPortsData = [];
           const newSourceIpsData = [];
           for (let i = 0; i < ports.length; i++) {
             const object = {
+              protocol: protocols[i],
               port: ports[i],
               sourceIp: sourceIps[i]
             };
-            newPortsData.push(object.port)
-            newSourceIpsData.push(object.sourceIp)
+            newProtocolsData.push(object.protocol);
+            newPortsData.push(object.port);
+            newSourceIpsData.push(object.sourceIp);
             objectArray.push(object);
           }
 
+          protocolsData = newProtocolsData;
           portsData = newPortsData;
           sourceIpsData = newSourceIpsData;
           diagramElement.sgRules = objectArray;
@@ -481,36 +502,75 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(contextMenu);
 
         for (let i = 0; i < portsData.length; i++) {
+
+          const sgProtocolInput = document.createElement("select");
+          sgProtocolInput.className = "protocol-input";
+          const sgTcpOption = document.createElement('option');
+          sgTcpOption.value = 'tcp';
+          sgTcpOption.textContent = 'tcp';
+          const sgIcmpOption = document.createElement('option');
+          sgIcmpOption.value = 'icmp';
+          sgIcmpOption.textContent = 'icmp';
+          const sgUdpOption = document.createElement('option');
+          sgUdpOption.value = 'udp';
+          sgUdpOption.textContent = 'udp';
+          sgProtocolInput.appendChild(sgTcpOption);
+          sgProtocolInput.appendChild(sgUdpOption);
+          sgProtocolInput.appendChild(sgIcmpOption);
+          sgProtocolInput.value = getDataByIndex(0, i);
+          protocolColumns.appendChild(sgProtocolInput);
+
           const portInput = document.createElement("input");
           portInput.type = "text";
           portInput.className = "port-input";
-          portInput.value = getDataByIndex(0, i);
+          portInput.value = getDataByIndex(1, i);
           portColumns.appendChild(portInput);
       
           const sourceIpInput = document.createElement("input");
           sourceIpInput.type = "text";
           sourceIpInput.className = "source-input";
-          sourceIpInput.value = getDataByIndex(1, i);
+          sourceIpInput.value = getDataByIndex(2, i);
           sourceIpColumns.appendChild(sourceIpInput);
         }
 
         function getDataByIndex(index, i) {
           if (index === 0) {
-            return portsData[i] || "";
+            return protocolsData[i] || "";
           } else if (index === 1) {
+            return portsData[i] || "";
+          }else if (index === 2) {
             return sourceIpsData[i] || "";
           }
         }
         
         function addRow() {
           const columns = document.querySelectorAll(".column");
-          const classNames = ["port-input", "source-input"];
+          const classNames = ["protocol-input", "port-input", "source-input"];
           
           columns.forEach((column, index) => {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.className = classNames[index];
-            column.appendChild(input);
+            if(classNames[index] === "protocol-input") {
+              const input = document.createElement("select");
+              input.className = classNames[index];
+              const sgTcpOption = document.createElement('option');
+              sgTcpOption.value = 'tcp';
+              sgTcpOption.textContent = 'tcp';
+              const sgIcmpOption = document.createElement('option');
+              sgIcmpOption.value = 'icmp';
+              sgIcmpOption.textContent = 'icmp';
+              const sgUdpOption = document.createElement('option');
+              sgUdpOption.value = 'udp';
+              sgUdpOption.textContent = 'udp';
+              input.appendChild(sgTcpOption);
+              input.appendChild(sgUdpOption);
+              input.appendChild(sgIcmpOption);
+              column.appendChild(input);
+            } else {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.className = classNames[index];
+              column.appendChild(input);
+            }
+            
           });
         }
 
@@ -665,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tgNameLabel.textContent = 'Target Group Name: ';
         const tgNameInput = document.createElement('input');
         tgNameInput.type = 'text';
-        tgNameInput.className = 'uuid-aws-tg';
+        tgNameInput.className = 'input-tg-name';
         tgNameInput.value = tgName;
 
         const tgProtocolLabel = document.createElement('label');
@@ -757,6 +817,196 @@ document.addEventListener('DOMContentLoaded', () => {
             tgProtocolVersionInput.style.display = 'none';
           }
         }
+      } else if (event.button === 2 && diagramElement.classList.contains('alb')) {
+        event.preventDefault();
+        closeContextMenu(); // Close any existing context menu
+    
+        const diagramElement = event.target;
+        let listeners = diagramElement.listeners || [];
+        const albName = diagramElement.dataset.albName || 'ALB1';
+        const albSubnetIds = diagramElement.dataset.albSubnetIds || '';
+    
+        contextMenu = document.createElement('div');
+        contextMenu.className = 'right-click-menu';
+        contextMenu.style.left = event.clientX + 'px';
+        contextMenu.style.top = event.clientY + 'px';
+        contextMenu.classList.add("show");
+
+        const albUuid = diagramElement.dataset.uuid;
+        const albUuidLabel = document.createElement('label');
+        albUuidLabel.textContent = 'ID: ';
+        const albUuidInput = document.createElement('input');
+        albUuidInput.type = 'text';
+        albUuidInput.className = 'uuid-aws-alb';
+        albUuidInput.value = albUuid;
+        albUuidInput.disabled = true;
+
+        const albNameLabel = document.createElement('label');
+        albNameLabel.textContent = 'ALB Name: ';
+        const albNameInput = document.createElement('input');
+        albNameInput.type = 'text';
+        albNameInput.className = 'input-alb-name';
+        albNameInput.value = albName;
+
+        const albSubnetIdLabel = document.createElement('label');
+        albSubnetIdLabel.textContent = 'Subnet IDs: ';
+        const albSubnetIdInput = document.createElement('input');
+        albSubnetIdInput.type = 'text';
+        albSubnetIdInput.className = 'input-alb-subnets';
+        albSubnetIdInput.value = albSubnetIds;
+
+        const listenerLabel = document.createElement('label');
+        listenerLabel.textContent = 'Listeners: ';
+
+        contextMenu.appendChild(albUuidLabel);
+        contextMenu.appendChild(albUuidInput);
+        contextMenu.appendChild(albNameLabel);
+        contextMenu.appendChild(albNameInput);
+        contextMenu.appendChild(albSubnetIdLabel);
+        contextMenu.appendChild(albSubnetIdInput);
+        contextMenu.appendChild(listenerLabel);
+        
+        const AlbColumnsDiv = document.createElement("div");
+        AlbColumnsDiv.classList.add("columns");
+        contextMenu.appendChild(AlbColumnsDiv);
+
+        const protocolColumns = document.createElement("div");
+        protocolColumns.classList.add("column");
+        const protocolLabel = document.createElement("label");
+        protocolLabel.textContent = "Protocol";
+        protocolLabel.style.color = "#505050";
+        protocolColumns.appendChild(protocolLabel);
+        AlbColumnsDiv.appendChild(protocolColumns);
+
+        const portColumns = document.createElement("div");
+        portColumns.classList.add("column");
+        const portLabel = document.createElement("label");
+        portLabel.textContent = "Port Number";
+        portLabel.style.color = "#505050";
+        portColumns.appendChild(portLabel);
+        AlbColumnsDiv.appendChild(portColumns);
+        
+        const targetIdColumns = document.createElement("div");
+        targetIdColumns.classList.add("column");
+        const targetIdLabel = document.createElement("label");
+        targetIdLabel.textContent = "Target Id";
+        targetIdLabel.style.color = "#505050";
+        targetIdColumns.appendChild(targetIdLabel);
+        AlbColumnsDiv.appendChild(targetIdColumns);
+
+        const addButton = document.createElement("button");
+        addButton.textContent = "Add Rule";
+        addButton.addEventListener("click", addRow);
+    
+        const okButton = document.createElement('button');
+        okButton.textContent = 'OK';
+    
+        okButton.addEventListener('click', () => {
+          diagramElement.dataset.albName = albNameInput.value;
+          diagramElement.dataset.albSubnetIds = albSubnetIdInput.value;
+
+          const albProtocols = Array.from(document.querySelectorAll(".alb-protocol-input")).map(
+            (input) => input.value
+          );
+          const albPorts = Array.from(document.querySelectorAll(".alb-port-input")).map(
+            (input) => input.value
+          );
+          const albTargetIds = Array.from(document.querySelectorAll(".alb-target-id-input")).map(
+            (input) => input.value
+          );
+        
+          const objectArray = [];
+          const newProtocolsData = [];
+          const newPortsData = [];
+          const newTargetIdsData = [];
+          for (let i = 0; i < albPorts.length; i++) {
+            const object = {
+              protocol: albProtocols[i],
+              port: albPorts[i],
+              targetId: albTargetIds[i]
+            };
+            newProtocolsData.push(object.protocol)
+            newPortsData.push(object.port)
+            newTargetIdsData.push(object.targetId)
+            objectArray.push(object);
+          }
+
+          albProtocolsData = newProtocolsData;
+          albPortsData = newPortsData;
+          albTargetIdsData = newTargetIdsData;
+          diagramElement.listeners = objectArray;
+          closeContextMenu(); 
+        });
+    
+        contextMenu.appendChild(addButton);
+        contextMenu.appendChild(okButton);
+    
+        document.body.appendChild(contextMenu);
+
+        for (let i = 0; i < albPortsData.length; i++) {
+
+          const protocolInput = document.createElement("select");
+          protocolInput.className = "alb-protocol-input";
+          const albHttpOption = document.createElement('option');
+          albHttpOption.value = 'HTTP';
+          albHttpOption.textContent = 'HTTP';
+          const albHttpsOption = document.createElement('option');
+          albHttpsOption.value = 'HTTPS';
+          albHttpsOption.textContent = 'HTTPS';
+          protocolInput.appendChild(albHttpOption);
+          protocolInput.appendChild(albHttpsOption);
+          protocolInput.value = getDataByIndex(0, i);
+          protocolColumns.appendChild(protocolInput);
+
+          const portInput = document.createElement("input");
+          portInput.type = "text";
+          portInput.className = "alb-port-input";
+          portInput.value = getDataByIndex(1, i);
+          portColumns.appendChild(portInput);
+      
+          const targetIdInput = document.createElement("input");
+          targetIdInput.type = "text";
+          targetIdInput.className = "alb-target-id-input";
+          targetIdInput.value = getDataByIndex(2, i);
+          targetIdColumns.appendChild(targetIdInput);
+        }
+
+        function getDataByIndex(index, i) {
+          if (index === 0) {
+            return albProtocolsData[i] || "";
+          } else if (index === 1) {
+            return albPortsData[i] || "";
+          } else if (index === 2) {
+            return albTargetIdsData[i] || "";
+          }
+        }
+        
+        function addRow() {
+          const columns = document.querySelectorAll(".column");
+          const classNames = ["alb-protocol-input", "alb-port-input", "alb-target-id-input"];
+          
+          columns.forEach((column, index) => {
+            if (classNames[index] === "alb-protocol-input") {
+              const input = document.createElement("select");
+              input.className = classNames[index];
+              const albHttpOption = document.createElement('option');
+              albHttpOption.value = 'HTTP';
+              albHttpOption.textContent = 'HTTP';
+              const albHttpsOption = document.createElement('option');
+              albHttpsOption.value = 'HTTPS';
+              albHttpsOption.textContent = 'HTTPS';
+              input.appendChild(albHttpOption);
+              input.appendChild(albHttpsOption);
+              column.appendChild(input);
+            } else {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.className = classNames[index];
+              column.appendChild(input);
+            }
+          });
+        }
+
       }
 
     });
@@ -825,7 +1075,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
   });
 
-  
   function generateHierarchy(element) {
     const children = Array.from(element.childNodes).filter(child => child.nodeType === Node.ELEMENT_NODE);
     const arc = document.getElementById('arcNameInput').value;;
@@ -836,12 +1085,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const nats = [];
     const sgs = [];
     const tgs = [];
+    const albs = [];
     const instances = [];
   
     children.forEach(child => {
       const name = child.dataset.uuid;
       const tagName = child.textContent.trim();
-      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : child.classList.contains('targetgrp') ? 'TG' : null;
+      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : child.classList.contains('targetgrp') ? 'TG' : child.classList.contains('alb') ? 'ALB' : null;
       const { left, top, width, height } = child.getBoundingClientRect();
 
       if (type === 'EC2') {
@@ -882,13 +1132,29 @@ document.addEventListener('DOMContentLoaded', () => {
             keyPair: ec2.dataset.keyPair || '',
             ephemeralStorage: ec2.dataset.ephemeralStorage || ''
           }));
+
+        const albs = children
+        .filter(c => c.classList.contains('alb'))
+        .filter(c => {
+          const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+          return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+            childTop >= top && childTop + c.offsetHeight <= top + height;
+        })
+        .map(alb => ({
+          name: alb.dataset.uuid,
+          tagName: alb.textContent.trim(),
+          type: 'ALB',
+          subnetIds: alb.dataset.albSubnetIds.split(',') || [],
+          listeners: alb.listeners || []
+        }));
   
         const securityGroup = {
           name,
           tagName,
           type,
           sgRules,
-          instances
+          instances,
+          albs
         };
   
         sgs.push(securityGroup);
@@ -928,6 +1194,21 @@ document.addEventListener('DOMContentLoaded', () => {
         };
   
         tgs.push(targetGroup);
+      }
+
+      if (type === 'ALB') {
+        const listeners = child.listeners || [];
+        const subnetIds = child.dataset.albSubnetIds.split(',') || [];
+  
+        const alb = {
+          name,
+          tagName,
+          type,
+          subnetIds,
+          listeners
+        };
+  
+        albs.push(alb);
       }
   
       if (type === 'Subnet') {
@@ -1040,7 +1321,8 @@ document.addEventListener('DOMContentLoaded', () => {
           igw,
           subnets: [],
           sgs: [],
-          tgs: []
+          tgs: [],
+          albs: []
         };
 
         children.filter(c => c.classList.contains('igw'))
@@ -1079,7 +1361,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tagName: sg.textContent.trim(),
             type: 'SG',
             sgRules: sg.sgRules || [],
-            instances: []
+            instances: [],
+            albs: []
           }));
 
           const vpctgs = children
@@ -1099,9 +1382,25 @@ document.addEventListener('DOMContentLoaded', () => {
             instances: []
           }));
 
+          const vpcalbs = children
+          .filter(c => c.classList.contains('alb'))
+          .filter(c => {
+            const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+            return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+              childTop >= top && childTop + c.offsetHeight <= top + height;
+          })
+          .map(alb => ({
+            name: alb.dataset.uuid,
+            tagName: alb.textContent.trim(),
+            type: 'ALB',
+            subnetIds: alb.dataset.albSubnetIds.split(',') || [],
+            listeners: alb.listeners || []
+          }));
+
         vpc.subnets.push(...vpcSubnets);
         vpc.sgs.push(...vpcsgs);
         vpc.tgs.push(...vpctgs);
+        vpc.albs.push(...vpcalbs);
         vpcs.push(vpc);
       }
   
@@ -1181,6 +1480,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nats,
       sgs,
       tgs,
+      albs,
       instances
     };
   }

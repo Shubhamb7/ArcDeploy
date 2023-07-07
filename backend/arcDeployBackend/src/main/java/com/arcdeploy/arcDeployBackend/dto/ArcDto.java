@@ -21,5 +21,6 @@ public class ArcDto {
     private List<Nat> nats;
     private List<SG> sgs;
     private List<TG> tgs;
+    private List<Alb> albs;
     private List<Ec2> instances;
 }

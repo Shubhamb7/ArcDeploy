@@ -4,6 +4,8 @@ import com.arcdeploy.arcDeployBackend.dto.ArcDto;
 import com.arcdeploy.arcDeployBackend.model.*;
 
 import com.hashicorp.cdktf.TerraformStack;
+import com.hashicorp.cdktf.providers.aws.alb_listener.AlbListener;
+import com.hashicorp.cdktf.providers.aws.alb_listener.AlbListenerDefaultAction;
 import com.hashicorp.cdktf.providers.aws.alb_target_group.AlbTargetGroup;
 import com.hashicorp.cdktf.providers.aws.alb_target_group_attachment.AlbTargetGroupAttachment;
 import com.hashicorp.cdktf.providers.aws.eip.Eip;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class MyAwsStack extends TerraformStack {
     public MyAwsStack(final Construct scope, final String id, final ArcDto arcDto) {
@@ -39,6 +42,7 @@ public class MyAwsStack extends TerraformStack {
         List<Nat> nats = arcDto.getNats();
         List<SG> sgs = arcDto.getSgs();
         List<TG> tgs = arcDto.getTgs();
+        List<Alb> albs = arcDto.getAlbs();
         List<Ec2> instances = arcDto.getInstances();
 
         int regionIndex = 0;
@@ -142,11 +146,16 @@ public class MyAwsStack extends TerraformStack {
                             SecurityGroup securityGroup = null;
                             List<SecurityGroup> securityGroupList = new ArrayList<>();
                             Map<String, String> sgMap = new HashMap<>();
+                            Map<String, String> albSgMap = new HashMap<>();
                             Map<String, String> sgIdMap = new HashMap<>();
                             Map<SecurityGroup,List<SgRule>> ingressRulesMap = new HashMap<>();
+                            Map<String,String> publicSubnetMap = new HashMap<>();
+                            Map<String,String> privateSubnetMap = new HashMap<>();
 
                             AlbTargetGroup tg = null;
                             Map<String, AlbTargetGroup> tgMap = new HashMap<>();
+                            Map<String, String> tgDeploymentArnMap = new HashMap<>();
+                            List<com.hashicorp.cdktf.providers.aws.alb.Alb> albList = new ArrayList<>();
 
                             for (Vpc tempVpc: regions.get(j).getVpcs()){
 
@@ -185,38 +194,43 @@ public class MyAwsStack extends TerraformStack {
 
                                                 if (tempSg.getName().equals(vpcs.get(k).getSgs().get(sgLoopIndex).getName())) {
 
-                                                        List<SgRule> ingressRulesList = new ArrayList<>();
+                                                    List<SgRule> ingressRulesList = new ArrayList<>();
 
-                                                        securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SG" + sgIndex + vpcIndex + regionIndex)
-                                                                .vpcId(vpcDeployment.getId())
-                                                                .egress(List.of(
-                                                                        SecurityGroupEgress.builder()
-                                                                                .fromPort(0)
-                                                                                .toPort(0)
-                                                                                .protocol("-1")
-                                                                                .cidrBlocks(List.of("0.0.0.0/0"))
-                                                                                .ipv6CidrBlocks(List.of("::/0")).build()
-                                                                ))
-                                                                .name(tempSg.getTagName() + "-" + awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
-                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
-                                                                .provider(provider)
-                                                                .build();
+                                                    securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SG" + sgIndex + vpcIndex + regionIndex)
+                                                            .vpcId(vpcDeployment.getId())
+                                                            .egress(List.of(
+                                                                    SecurityGroupEgress.builder()
+                                                                            .fromPort(0)
+                                                                            .toPort(0)
+                                                                            .protocol("-1")
+                                                                            .cidrBlocks(List.of("0.0.0.0/0"))
+                                                                            .ipv6CidrBlocks(List.of("::/0")).build()
+                                                            ))
+                                                            .name(tempSg.getTagName() + "-" + awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
+                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
+                                                            .provider(provider)
+                                                            .build();
 
-                                                        for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
-                                                            SgRule rule = new SgRule();
-                                                            rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
-                                                            rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
-                                                            ingressRulesList.add(rule);
-                                                        }
+                                                    for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
+                                                        SgRule rule = new SgRule();
+                                                        rule.setProtocol(tempSg.getSgRules().get(sgRuleIndex).getProtocol());
+                                                        rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
+                                                        rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
+                                                        ingressRulesList.add(rule);
+                                                    }
 
-                                                        ingressRulesMap.put(securityGroup, ingressRulesList);
-                                                        securityGroupList.add(securityGroup);
+                                                    ingressRulesMap.put(securityGroup, ingressRulesList);
+                                                    securityGroupList.add(securityGroup);
 
-                                                        for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
-                                                            sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
-                                                        }
+                                                    for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
+                                                        sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
+                                                    }
 
-                                                        sgIdMap.put(tempSg.getName(), securityGroup.getId());
+                                                    for (int albNameIndex=0; albNameIndex<tempSg.getAlbs().size(); albNameIndex ++) {
+                                                        albSgMap.put(tempSg.getAlbs().get(albNameIndex).getName(), securityGroup.getId());
+                                                    }
+
+                                                    sgIdMap.put(tempSg.getName(), securityGroup.getId());
                                                 }
                                             }
 
@@ -229,11 +243,13 @@ public class MyAwsStack extends TerraformStack {
 
                                             for (SgRule ingressRule: ingressRulesMap.get(sg)){
 
-                                                if(ingressRule.getSourceIp().equals("0.0.0.0/0")){
+                                                Pattern pattern = Pattern.compile("^\\d{1,3}(\\.\\d{1,3}){3}/\\d{1,2}$");
+
+                                                if(pattern.matcher(ingressRule.getSourceIp()).matches()){
                                                     SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
                                                             .fromPort(Integer.parseInt(ingressRule.getPort()))
                                                             .toPort(Integer.parseInt(ingressRule.getPort()))
-                                                            .protocol("tcp")
+                                                            .protocol(ingressRule.getProtocol())
                                                             .cidrBlocks(List.of(ingressRule.getSourceIp()))
                                                             .build();
                                                     sgIngressList.add(tempIngress);
@@ -241,7 +257,7 @@ public class MyAwsStack extends TerraformStack {
                                                     SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
                                                             .fromPort(Integer.parseInt(ingressRule.getPort()))
                                                             .toPort(Integer.parseInt(ingressRule.getPort()))
-                                                            .protocol("tcp")
+                                                            .protocol(ingressRule.getProtocol())
                                                             .securityGroups(List.of(sgIdMap.get(ingressRule.getSourceIp())))
                                                             .build();
                                                     sgIngressList.add(tempIngress);
@@ -270,6 +286,7 @@ public class MyAwsStack extends TerraformStack {
 
                                                     for(Ec2 tempInstance: tempTg.getInstances()){
                                                         tgMap.put(tempInstance.getName(),tg);
+                                                        tgDeploymentArnMap.put(tempTg.getName(), tg.getArn());
                                                     }
                                                 }
                                             }
@@ -298,6 +315,8 @@ public class MyAwsStack extends TerraformStack {
                                                     .provider(provider)
                                                     .build();
 
+                                            publicSubnetMap.put(subnets.get(l).getName(), subnetDeployment.getId());
+
                                             if(subnets.get(l).getNat()){
                                                 publicSubnetList.add(subnetDeployment);
                                                 publicSubnetCidrList.add(subnets.get(l).getSubnetCidr());
@@ -323,6 +342,8 @@ public class MyAwsStack extends TerraformStack {
 
                                             privateSubnetList.add(subnetDeployment);
                                             privateSubnetCidrList.add(subnets.get(l).getSubnetCidr());
+                                            privateSubnetMap.put(subnets.get(l).getName(), subnetDeployment.getId());
+
                                         }
                                     }
                                 }
@@ -482,6 +503,61 @@ public class MyAwsStack extends TerraformStack {
                                             }
                                         }
                                     }
+                                }
+                            }
+
+                            int listenerIndex = 0;
+                            for (Vpc tempVpc: regions.get(j).getVpcs()) {
+                                if (tempVpc.getName().equals(vpcs.get(k).getName())
+                                        && tempVpc.getCidr().equals(vpcs.get(k).getCidr())) {
+
+                                    if(!vpcs.get(k).getAlbs().isEmpty()) {
+
+                                        for(int albIndexLoop=0; albIndexLoop<vpcs.get(k).getAlbs().size(); albIndexLoop ++) {
+
+                                            for(Alb tempAlb: albs) {
+
+                                                if (tempAlb.getName().equals(vpcs.get(k).getAlbs().get(albIndexLoop).getName())) {
+
+                                                    List<String> subnetIds = new ArrayList<>();
+
+                                                    for (String sub: tempAlb.getSubnetIds()) {
+                                                        subnetIds.add(publicSubnetMap.get(sub));
+                                                    }
+
+                                                    com.hashicorp.cdktf.providers.aws.alb.Alb alb = com.hashicorp.cdktf.providers.aws.alb.Alb.Builder.create(this, tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
+                                                            .name(vpcs.get(k).getTagName() + "-" + tempAlb.getTagName())
+                                                            .securityGroups(List.of(albSgMap.get(tempAlb.getName())))
+                                                            .internal(false)
+                                                            .loadBalancerType("application")
+                                                            .subnets(subnetIds)
+                                                            .enableCrossZoneLoadBalancing(true)
+                                                            .enableDeletionProtection(false)
+                                                            .provider(provider)
+                                                            .build();
+
+                                                    for (Listener listener: tempAlb.getListeners()) {
+                                                        AlbListener.Builder.create(this, tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                .loadBalancerArn(alb.getArn())
+                                                                .port(Integer.parseInt(listener.getPort()))
+                                                                .protocol(listener.getProtocol())
+                                                                .defaultAction(List.of(
+                                                                        AlbListenerDefaultAction.builder()
+                                                                                .type("forward")
+                                                                                .targetGroupArn(tgDeploymentArnMap.get(listener.getTargetId()))
+                                                                                .build()
+                                                                ))
+                                                                .provider(provider)
+                                                                .build();
+                                                    }
+                                                }
+
+                                            }
+
+                                        }
+
+                                    }
+
                                 }
                             }
 

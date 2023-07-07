@@ -11,8 +11,10 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class SgRule {
-    private String protocol;
-    private String port;
-    private String sourceIp;
+public class Alb {
+    private String name;
+    private String tagName;
+    private String type;
+    private List<String> subnetIds;
+    private List<Listener> listeners;
 }

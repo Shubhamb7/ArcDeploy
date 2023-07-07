@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class SgRule {
+public class Listener {
     private String protocol;
     private String port;
-    private String sourceIp;
+    private String targetId;
 }

@@ -20,4 +20,5 @@ public class Vpc{
     private List<Subnet> subnets;
     private List<SG> sgs;
     private List<TG> tgs;
+    private List<Alb> albs;
 }
