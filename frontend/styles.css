@@ -298,6 +298,15 @@
   font-size: small;
 }
 
+.context-menu textarea {
+  width: 90%;
+  height: 80px;
+  padding: 2px;
+  margin-bottom: 10px;
+  font-size: small;
+  overflow: auto;
+}
+
 .context-menu button {
   padding: 5px 10px;
   border-radius: 10%;

@@ -206,7 +206,7 @@ public class MyAwsStack extends TerraformStack {
                                                                             .cidrBlocks(List.of("0.0.0.0/0"))
                                                                             .ipv6CidrBlocks(List.of("::/0")).build()
                                                             ))
-                                                            .name(tempSg.getTagName() + "-" + awsClouds.get(i).getProjectName() + "-" + tempSg.getName())
+                                                            .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getTagName() + "-" + tempSg.getName())
                                                             .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
                                                             .provider(provider)
                                                             .build();
@@ -376,6 +376,7 @@ public class MyAwsStack extends TerraformStack {
                                                                         .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                                 .keyName(instances.get(m).getKeyPair())
                                                                 .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
+                                                                .userData(instances.get(m).getUserData())
                                                                 .provider(provider)
                                                                 .build();
 
@@ -405,6 +406,7 @@ public class MyAwsStack extends TerraformStack {
                                                                         .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                                 .keyName(instances.get(m).getKeyPair())
                                                                 .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
+                                                                .userData(instances.get(m).getUserData())
                                                                 .provider(provider)
                                                                 .build();
 
@@ -434,6 +436,7 @@ public class MyAwsStack extends TerraformStack {
                                                                     .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
                                                             .keyName(instances.get(m).getKeyPair())
                                                             .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + instances.get(m).getTagName()))
+                                                            .userData(instances.get(m).getUserData())
                                                             .provider(provider)
                                                             .build();
 

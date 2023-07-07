@@ -585,12 +585,14 @@ document.addEventListener('DOMContentLoaded', () => {
           operatingSystem: diagramElement.dataset.operatingSystem || 'ubuntu',
           operatingSystemVersion: diagramElement.dataset.operatingSystem || '20.04',
           ephemeralStorage: diagramElement.dataset.ephemeralStorage || '30',
+          userData: diagramElement.dataset.userData || ''
         };
 
         contextMenu = document.createElement('div');
         contextMenu.className = 'context-menu';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
+        contextMenu.style.width = "200px";
 
         const ec2Uuid = diagramElement.dataset.uuid;
         const ec2UuidLabel = document.createElement('label');
@@ -668,6 +670,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ephemeralStorageInput.className = 'input-ephemeral-storage';
         ephemeralStorageInput.value = ec2Data.ephemeralStorage;
 
+        const userDataLabel = document.createElement('label');
+        userDataLabel.textContent = 'User Data: ';
+        const userDataInput = document.createElement('textArea');
+        userDataInput.type = 'text';
+        userDataInput.className = 'input-user-data';
+        userDataInput.value = ec2Data.userData;
+
         const okButton = document.createElement('button');
         okButton.textContent = 'OK';
 
@@ -677,6 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
           diagramElement.dataset.operatingSystemVersion = versionInput.value;
           diagramElement.dataset.keyPair = keyPairInput.value;
           diagramElement.dataset.ephemeralStorage = ephemeralStorageInput.value;
+          diagramElement.dataset.userData = userDataInput.value;
           closeContextMenu(); // Close the context menu after clicking OK
         });
 
@@ -692,6 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.appendChild(keyPairInput);
         contextMenu.appendChild(ephemeralStorageLabel);
         contextMenu.appendChild(ephemeralStorageInput);
+        contextMenu.appendChild(userDataLabel);
+        contextMenu.appendChild(userDataInput);
         contextMenu.appendChild(okButton);
 
         document.body.appendChild(contextMenu);
@@ -1100,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const operatingSystem = child.dataset.operatingSystem || '';
         const operatingSystemVersion = child.dataset.operatingSystemVersion || '';
         const ephemeralStorage = child.dataset.ephemeralStorage || '';
+        const userData = child.dataset.userData || '';
   
         instances.push({
           name,
@@ -1109,7 +1122,8 @@ document.addEventListener('DOMContentLoaded', () => {
           operatingSystem,
           operatingSystemVersion,
           keyPair,
-          ephemeralStorage
+          ephemeralStorage,
+          userData
         });
       }
 
@@ -1130,7 +1144,8 @@ document.addEventListener('DOMContentLoaded', () => {
             operatingSystem: ec2.dataset.operatingSystem || '',
             operatingSystemVersion: ec2.dataset.operatingSystemVersion || '',
             keyPair: ec2.dataset.keyPair || '',
-            ephemeralStorage: ec2.dataset.ephemeralStorage || ''
+            ephemeralStorage: ec2.dataset.ephemeralStorage || '',
+            userData: ec2.dataset.userData || ''
           }));
 
         const albs = children
@@ -1180,7 +1195,8 @@ document.addEventListener('DOMContentLoaded', () => {
             operatingSystem: ec2.dataset.operatingSystem || '',
             operatingSystemVersion: ec2.dataset.operatingSystemVersion || '',
             keyPair: ec2.dataset.keyPair || '',
-            ephemeralStorage: ec2.dataset.ephemeralStorage || ''
+            ephemeralStorage: ec2.dataset.ephemeralStorage || '',
+            userData: ec2.dataset.userData || ''
           }));
   
         const targetGroup = {
@@ -1264,7 +1280,8 @@ document.addEventListener('DOMContentLoaded', () => {
             operatingSystem: ec2.dataset.operatingSystem || '',
             operatingSystemVersion: ec2.dataset.operatingSystemVersion || '',
             keyPair: ec2.dataset.keyPair || '',
-            ephemeralStorage: ec2.dataset.ephemeralStorage || ''
+            ephemeralStorage: ec2.dataset.ephemeralStorage || '',
+            userData: ec2.dataset.userData || ''
           }));
   
         subnet.instances.push(...subnetInstances);
@@ -1301,7 +1318,8 @@ document.addEventListener('DOMContentLoaded', () => {
             operatingSystem: ec2.dataset.operatingSystem || '',
             operatingSystemVersion: ec2.dataset.operatingSystemVersion || '',
             keyPair: ec2.dataset.keyPair || '',
-            ephemeralStorage: ec2.dataset.ephemeralStorage || ''
+            ephemeralStorage: ec2.dataset.ephemeralStorage || '',
+            userData: ec2.dataset.userData || ''
           }));
   
         subnet.instances.push(...subnetInstances);

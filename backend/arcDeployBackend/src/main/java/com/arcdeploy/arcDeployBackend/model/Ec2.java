@@ -20,4 +20,5 @@ public class Ec2 {
     private String operatingSystemVersion;
     private String keyPair;
     private String ephemeralStorage;
+    private String userData;
 }
