@@ -535,64 +535,63 @@ public class MyAwsStack extends TerraformStack {
                                                 && tempOpenVPN.getUserCount().equals(openvpns.get(m).getUserCount())
                                                 && tempOpenVPN.getEphemeralStorage().equals(openvpns.get(m).getEphemeralStorage())) {
 
-                                            if (openvpns.get(m).getUserCount().equals("5")) {
+                                            switch (openvpns.get(m).getUserCount()) {
+                                                case "5" -> {
+                                                    if (openVpnSgMap.containsKey(openvpns.get(m).getName())) {
 
-                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
-
-                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
-                                                            .instanceType(openvpns.get(m).getInstanceType())
-                                                            .ami(openVpn5.getId())
-                                                            .subnetId(subnetDeployment.getId())
-                                                            .securityGroups(List.of(
-                                                                    openVpnSgMap.get(openvpns.get(m).getName())
-                                                            ))
-                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
-                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
-                                                            .keyName(openvpns.get(m).getKeyPair())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
-                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
-                                                            .provider(provider)
-                                                            .build();
+                                                        Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                                .instanceType(openvpns.get(m).getInstanceType())
+                                                                .ami(openVpn5.getId())
+                                                                .subnetId(subnetDeployment.getId())
+                                                                .securityGroups(List.of(
+                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                ))
+                                                                .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                        .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                                .keyName(openvpns.get(m).getKeyPair())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                                .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                                .provider(provider)
+                                                                .build();
+                                                    }
                                                 }
+                                                case "10" -> {
+                                                    if (openVpnSgMap.containsKey(openvpns.get(m).getName())) {
 
-                                            } else if (openvpns.get(m).getUserCount().equals("10")) {
-
-                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
-
-                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
-                                                            .instanceType(openvpns.get(m).getInstanceType())
-                                                            .ami(openVpn10.getId())
-                                                            .subnetId(subnetDeployment.getId())
-                                                            .securityGroups(List.of(
-                                                                    openVpnSgMap.get(openvpns.get(m).getName())
-                                                            ))
-                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
-                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
-                                                            .keyName(openvpns.get(m).getKeyPair())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
-                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
-                                                            .provider(provider)
-                                                            .build();
+                                                        Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                                .instanceType(openvpns.get(m).getInstanceType())
+                                                                .ami(openVpn10.getId())
+                                                                .subnetId(subnetDeployment.getId())
+                                                                .securityGroups(List.of(
+                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                ))
+                                                                .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                        .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                                .keyName(openvpns.get(m).getKeyPair())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                                .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                                .provider(provider)
+                                                                .build();
+                                                    }
                                                 }
+                                                case "25" -> {
+                                                    if (openVpnSgMap.containsKey(openvpns.get(m).getName())) {
 
-                                            } else if (openvpns.get(m).getUserCount().equals("25")) {
-
-                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
-
-                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
-                                                            .instanceType(openvpns.get(m).getInstanceType())
-                                                            .ami(openVpn25.getId())
-                                                            .subnetId(subnetDeployment.getId())
-                                                            .securityGroups(List.of(
-                                                                    openVpnSgMap.get(openvpns.get(m).getName())
-                                                            ))
-                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
-                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
-                                                            .keyName(openvpns.get(m).getKeyPair())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
-                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
-                                                            .provider(provider)
-                                                            .build();
+                                                        Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                                .instanceType(openvpns.get(m).getInstanceType())
+                                                                .ami(openVpn25.getId())
+                                                                .subnetId(subnetDeployment.getId())
+                                                                .securityGroups(List.of(
+                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                ))
+                                                                .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                        .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                                .keyName(openvpns.get(m).getKeyPair())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                                .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                                .provider(provider)
+                                                                .build();
+                                                    }
                                                 }
                                             }
                                         }
