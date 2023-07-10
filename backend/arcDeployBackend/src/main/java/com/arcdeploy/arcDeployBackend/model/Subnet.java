@@ -19,4 +19,5 @@ public class Subnet extends Ec2{
     private String subnetCidr;
     private Boolean nat;
     private List<Ec2> instances;
+    private List<OpenVPN> openvpns;
 }

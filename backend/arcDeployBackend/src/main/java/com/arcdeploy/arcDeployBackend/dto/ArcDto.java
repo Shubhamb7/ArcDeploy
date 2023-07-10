@@ -23,4 +23,5 @@ public class ArcDto {
     private List<TG> tgs;
     private List<Alb> albs;
     private List<Ec2> instances;
+    private List<OpenVPN> openvpns;
 }

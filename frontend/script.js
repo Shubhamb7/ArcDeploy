@@ -75,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (diagramText === 'EC2') {
       diagramElement.classList.add('ec2');
       diagramElement.dataset.uuid = 'ec2-' + generateUUID();
+    } else if (diagramText === 'OpenVPN') {
+      diagramElement.classList.add('openvpn');
+      diagramElement.dataset.uuid = 'openvpn-' + generateUUID();
     } else if (diagramText === 'SG') {
       diagramElement.classList.add('securitygroup');
       diagramElement.dataset.uuid = 'sg-' + generateUUID();
@@ -412,7 +415,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const diagramElement = event.target;
         let sgRules = diagramElement.sgRules || [];
-    
+        const firstRightClick = diagramElement.dataset.firstRightClick || true;
+        
+        if (firstRightClick === true){
+          const openvpnElements = Array.from(document.getElementsByClassName('openvpn'));
+          const securityGroupRect = diagramElement.getBoundingClientRect();
+        
+          for (const openvpnElement of openvpnElements) {
+            const openvpnRect = openvpnElement.getBoundingClientRect();
+            if (
+              openvpnRect.left >= securityGroupRect.left &&
+              openvpnRect.top >= securityGroupRect.top &&
+              openvpnRect.right <= securityGroupRect.right &&
+              openvpnRect.bottom <= securityGroupRect.bottom
+            ) {
+              diagramElement.dataset.firstRightClick = false;
+              protocolsData = ["tcp","tcp","tcp","udp"];
+              portsData = ["22","443","943","1194"];
+              sourceIpsData = ["0.0.0.0/0","0.0.0.0/0","0.0.0.0/0","0.0.0.0/0"];
+            }
+          }
+        }
+
         contextMenu = document.createElement('div');
         contextMenu.className = 'right-click-menu';
         contextMenu.style.left = event.clientX + 'px';
@@ -583,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
           keyPair: diagramElement.dataset.keyPair || 'kafkacali',
           instanceType: diagramElement.dataset.instanceType || 't2.small',
           operatingSystem: diagramElement.dataset.operatingSystem || 'ubuntu',
-          operatingSystemVersion: diagramElement.dataset.operatingSystem || '20.04',
+          operatingSystemVersion: diagramElement.dataset.operatingSystemVersion || '20.04',
           ephemeralStorage: diagramElement.dataset.ephemeralStorage || '30',
           userData: diagramElement.dataset.userData || ''
         };
@@ -704,6 +728,118 @@ document.addEventListener('DOMContentLoaded', () => {
         contextMenu.appendChild(ephemeralStorageInput);
         contextMenu.appendChild(userDataLabel);
         contextMenu.appendChild(userDataInput);
+        contextMenu.appendChild(okButton);
+
+        document.body.appendChild(contextMenu);
+      } else if (event.button === 2 && diagramElement.classList.contains('openvpn')) {
+        event.preventDefault();
+        closeContextMenu(); // Close any existing context menu
+
+        const diagramElement = event.target;
+        const ec2Data = {
+          keyPair: diagramElement.dataset.keyPair || 'kafkacali',
+          instanceType: diagramElement.dataset.instanceType || 't2.small',
+          ephemeralStorage: diagramElement.dataset.ephemeralStorage || '20',
+          userCount: diagramElement.dataset.userCount || '5',
+          vpnUsername: diagramElement.dataset.vpnUsername || '',
+          vpnPasswd: diagramElement.dataset.vpnPasswd || ''
+        };
+
+        contextMenu = document.createElement('div');
+        contextMenu.className = 'context-menu';
+        contextMenu.style.left = event.clientX + 'px';
+        contextMenu.style.top = event.clientY + 'px';
+        contextMenu.style.width = "200px";
+
+        const ec2Uuid = diagramElement.dataset.uuid;
+        const ec2UuidLabel = document.createElement('label');
+        ec2UuidLabel.textContent = 'ID: ';
+        const ec2UuidInput = document.createElement('input');
+        ec2UuidInput.type = 'text';
+        ec2UuidInput.className = 'uuid-aws-ec2';
+        ec2UuidInput.value = ec2Uuid;
+        ec2UuidInput.disabled = true;
+
+        const keyPairLabel = document.createElement('label');
+        keyPairLabel.textContent = 'Key Pair Name:';
+        const keyPairInput = document.createElement('input');
+        keyPairInput.type = 'text';
+        keyPairInput.className = 'input-key-type';
+        keyPairInput.value = ec2Data.keyPair;
+
+        const instanceTypeLabel = document.createElement('label');
+        instanceTypeLabel.textContent = 'Instance Type:';
+        const instanceTypeInput = document.createElement('input');
+        instanceTypeInput.type = 'text';
+        instanceTypeInput.className = 'input-instance-type';
+        instanceTypeInput.value = ec2Data.instanceType;
+
+        const userCountLabel = document.createElement('label');
+        userCountLabel.textContent = 'User Count:';
+        const userCountInput = document.createElement('select');
+        userCountInput.className = 'input-openvpn-user-count';
+        const Count5Option = document.createElement('option');
+        Count5Option.value = '5';
+        Count5Option.textContent = '5';
+        const Count10Option = document.createElement('option');
+        Count10Option.value = '10';
+        Count10Option.textContent = '10';
+        const Count25Option = document.createElement('option');
+        Count25Option.value = '25';
+        Count25Option.textContent = '25';
+        userCountInput.appendChild(Count5Option);
+        userCountInput.appendChild(Count10Option);
+        userCountInput.appendChild(Count25Option);
+        userCountInput.value = ec2Data.userCount;
+
+        const ephemeralStorageLabel = document.createElement('label');
+        ephemeralStorageLabel.textContent = 'Ephemeral Storage(GB):';
+        const ephemeralStorageInput = document.createElement('input');
+        ephemeralStorageInput.type = 'text';
+        ephemeralStorageInput.className = 'input-ephemeral-storage';
+        ephemeralStorageInput.value = ec2Data.ephemeralStorage;
+
+        const vpnUsernameLabel = document.createElement('label');
+        vpnUsernameLabel.textContent = 'Username:';
+        const vpnUsernameInput = document.createElement('input');
+        vpnUsernameInput.type = 'text';
+        vpnUsernameInput.className = 'input-vpn-user';
+        vpnUsernameInput.value = ec2Data.vpnUsername;
+
+        const vpnPasswordLabel = document.createElement('label');
+        vpnPasswordLabel.textContent = 'Password:';
+        const vpnPasswordInput = document.createElement('input');
+        vpnPasswordInput.type = 'text';
+        vpnPasswordInput.className = 'input-vpn-pass';
+        vpnPasswordInput.value = ec2Data.vpnPasswd;
+
+        const okButton = document.createElement('button');
+        okButton.textContent = 'OK';
+
+        okButton.addEventListener('click', () => {
+          diagramElement.dataset.instanceType = instanceTypeInput.value;
+          diagramElement.dataset.userCount = userCountInput.value;
+          diagramElement.dataset.keyPair = keyPairInput.value;
+          diagramElement.dataset.ephemeralStorage = ephemeralStorageInput.value;
+          diagramElement.dataset.vpnUsername = vpnUsernameInput.value;
+          diagramElement.dataset.vpnPasswd = vpnPasswordInput.value;
+          closeContextMenu();
+        });
+
+        contextMenu.appendChild(ec2UuidLabel);
+        contextMenu.appendChild(ec2UuidInput);
+        contextMenu.appendChild(instanceTypeLabel);
+        contextMenu.appendChild(instanceTypeInput);
+        contextMenu.appendChild(userCountLabel);
+        contextMenu.appendChild(userCountInput);
+        contextMenu.appendChild(keyPairLabel);
+        contextMenu.appendChild(keyPairInput);
+        contextMenu.appendChild(ephemeralStorageLabel);
+        contextMenu.appendChild(ephemeralStorageInput);
+        contextMenu.appendChild(vpnUsernameLabel);
+        contextMenu.appendChild(vpnUsernameInput);
+        contextMenu.appendChild(vpnPasswordLabel);
+        contextMenu.appendChild(vpnPasswordInput);
         contextMenu.appendChild(okButton);
 
         document.body.appendChild(contextMenu);
@@ -1020,7 +1156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
       }
-
     });
     drawingArea.appendChild(diagramElement);
   });
@@ -1099,11 +1234,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const tgs = [];
     const albs = [];
     const instances = [];
+    const openvpns = [];
   
     children.forEach(child => {
       const name = child.dataset.uuid;
       const tagName = child.textContent.trim();
-      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : child.classList.contains('targetgrp') ? 'TG' : child.classList.contains('alb') ? 'ALB' : null;
+      const type = child.classList.contains('ec2') ? 'EC2' : child.classList.contains('openvpn') ? 'OpenVPN' : child.classList.contains('subnet') ? 'Subnet' : child.classList.contains('privatesubnet') ? 'PrivateSubnet' : child.classList.contains('vpc') ? 'VPC' : child.classList.contains('region') ? 'Region' : child.classList.contains('awscloud') ? 'AWS' : child.classList.contains('nat') ? 'Nat' : child.classList.contains('securitygroup') ? 'SG' : child.classList.contains('targetgrp') ? 'TG' : child.classList.contains('alb') ? 'ALB' : null;
       const { left, top, width, height } = child.getBoundingClientRect();
 
       if (type === 'EC2') {
@@ -1124,6 +1260,27 @@ document.addEventListener('DOMContentLoaded', () => {
           keyPair,
           ephemeralStorage,
           userData
+        });
+      }
+
+      if (type === 'OpenVPN') {
+        const keyPair = child.dataset.keyPair || '';
+        const instanceType = child.dataset.instanceType || '';
+        const userCount = child.dataset.userCount || '';
+        const ephemeralStorage = child.dataset.ephemeralStorage || '';
+        const vpnUsername = child.dataset.vpnUsername || '';
+        const vpnPasswd = child.dataset.vpnPasswd || '';
+  
+        openvpns.push({
+          name,
+          tagName,
+          type,
+          instanceType,
+          userCount,
+          keyPair,
+          ephemeralStorage,
+          vpnUsername,
+          vpnPasswd
         });
       }
 
@@ -1148,6 +1305,25 @@ document.addEventListener('DOMContentLoaded', () => {
             userData: ec2.dataset.userData || ''
           }));
 
+          const openvpns = children
+          .filter(c => c.classList.contains('openvpn'))
+          .filter(c => {
+            const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+            return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+              childTop >= top && childTop + c.offsetHeight <= top + height;
+          })
+          .map(vpn => ({
+            name: vpn.dataset.uuid,
+            tagName: vpn.textContent.trim(),
+            type: 'OpenVPN',
+            instanceType: vpn.dataset.instanceType || '',
+            userCount: vpn.dataset.userCount || '',
+            keyPair: vpn.dataset.keyPair || '',
+            ephemeralStorage: vpn.dataset.ephemeralStorage || '',
+            vpnUsername: vpn.dataset.vpnUsername || '',
+            vpnPasswd: vpn.dataset.vpnPasswd || ''
+          }));
+
         const albs = children
         .filter(c => c.classList.contains('alb'))
         .filter(c => {
@@ -1169,6 +1345,7 @@ document.addEventListener('DOMContentLoaded', () => {
           type,
           sgRules,
           instances,
+          openvpns,
           albs
         };
   
@@ -1239,7 +1416,8 @@ document.addEventListener('DOMContentLoaded', () => {
           availabilityZone,
           subnetCidr,
           nat,
-          instances: []
+          instances: [],
+          openvpns: []
         };
 
         if (children
@@ -1283,7 +1461,27 @@ document.addEventListener('DOMContentLoaded', () => {
             ephemeralStorage: ec2.dataset.ephemeralStorage || '',
             userData: ec2.dataset.userData || ''
           }));
+
+        const subnetOpenvpns = children
+        .filter(c => c.classList.contains('openvpn'))
+        .filter(c => {
+          const { left: childLeft, top: childTop } = c.getBoundingClientRect();
+          return childLeft >= left && childLeft + c.offsetWidth <= left + width &&
+            childTop >= top && childTop + c.offsetHeight <= top + height;
+        })
+        .map(vpn => ({
+          name: vpn.dataset.uuid,
+          tagName: vpn.textContent.trim(),
+          type: 'OpenVPN',
+          instanceType: vpn.dataset.instanceType || '',
+          userCount: vpn.dataset.userCount || '',
+          keyPair: vpn.dataset.keyPair || '',
+          ephemeralStorage: vpn.dataset.ephemeralStorage || '',
+          vpnUsername: vpn.dataset.vpnUsername || '',
+          vpnPasswd: vpn.dataset.vpnPasswd || ''
+        }));
   
+        subnet.openvpns.push(...subnetOpenvpns);
         subnet.instances.push(...subnetInstances);
         subnets.push(subnet);
       }
@@ -1300,7 +1498,8 @@ document.addEventListener('DOMContentLoaded', () => {
           availabilityZone,
           subnetCidr,
           nat,
-          instances: []
+          instances: [],
+          openvpns: []
         };
   
         const subnetInstances = children
@@ -1364,7 +1563,8 @@ document.addEventListener('DOMContentLoaded', () => {
             availabilityZone: subnet.dataset.availabilityZone || '',
             subnetCidr: subnet.dataset.subnetCidr || '',
             nat: null,
-            instances: []
+            instances: [],
+            openvpns: []
           }));
 
         const vpcsgs = children
@@ -1380,6 +1580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'SG',
             sgRules: sg.sgRules || [],
             instances: [],
+            openvpns: [],
             albs: []
           }));
 
@@ -1499,7 +1700,8 @@ document.addEventListener('DOMContentLoaded', () => {
       sgs,
       tgs,
       albs,
-      instances
+      instances,
+      openvpns
     };
   }
 

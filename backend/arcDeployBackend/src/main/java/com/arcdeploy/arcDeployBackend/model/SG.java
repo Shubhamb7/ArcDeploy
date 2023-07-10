@@ -17,5 +17,6 @@ public class SG {
     private String type;
     private List<SgRule> SgRules;
     private List<Ec2> instances;
+    private List<OpenVPN> openvpns;
     private List<Alb> albs;
 }

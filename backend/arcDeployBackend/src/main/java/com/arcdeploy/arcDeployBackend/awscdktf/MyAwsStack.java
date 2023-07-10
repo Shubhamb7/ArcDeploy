@@ -44,6 +44,7 @@ public class MyAwsStack extends TerraformStack {
         List<TG> tgs = arcDto.getTgs();
         List<Alb> albs = arcDto.getAlbs();
         List<Ec2> instances = arcDto.getInstances();
+        List<OpenVPN> openvpns = arcDto.getOpenvpns();
 
         int regionIndex = 0;
         int vpcIndex = 0;
@@ -52,6 +53,7 @@ public class MyAwsStack extends TerraformStack {
         int natIndex = 0;
         int sgIndex = 0;
         int instanceIndex = 0;
+        int openVpnIndex = 0;
 
         for (int i = 0; i < awsClouds.size(); i++) {
 
@@ -130,6 +132,66 @@ public class MyAwsStack extends TerraformStack {
                                 .provider(provider)
                                 .build();
 
+                        DataAwsAmi openVpn5 = DataAwsAmi.Builder.create(this, "openvpn5-ami" + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
+                                .mostRecent(true)
+                                .filter(List.of(
+                                        DataAwsAmiFilter.builder()
+                                                .name("name")
+                                                .values(List.of("OpenVPN Access Server QA Image-3b5882c4-551b-43fa-acfe-7f5cdb896ff1*"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("virtualization-type")
+                                                .values(List.of("hvm"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("architecture")
+                                                .values(List.of("x86_64"))
+                                                .build()
+                                ))
+                                .owners(List.of("679593333241")) // OpenVPN
+                                .provider(provider)
+                                .build();
+
+                        DataAwsAmi openVpn10 = DataAwsAmi.Builder.create(this, "openvpn10-ami" + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
+                                .mostRecent(true)
+                                .filter(List.of(
+                                        DataAwsAmiFilter.builder()
+                                                .name("name")
+                                                .values(List.of("OpenVPN Access Server QA Image-8fbe3379-63b6-43e8-87bd-0e93fd7be8f3*"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("virtualization-type")
+                                                .values(List.of("hvm"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("architecture")
+                                                .values(List.of("x86_64"))
+                                                .build()
+                                ))
+                                .owners(List.of("679593333241")) // OpenVPN
+                                .provider(provider)
+                                .build();
+
+                        DataAwsAmi openVpn25 = DataAwsAmi.Builder.create(this, "openvpn25-ami" + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
+                                .mostRecent(true)
+                                .filter(List.of(
+                                        DataAwsAmiFilter.builder()
+                                                .name("name")
+                                                .values(List.of("OpenVPN Access Server QA Image-23223b90-d61f-472a-b732-f2b98e6fa3fb*"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("virtualization-type")
+                                                .values(List.of("hvm"))
+                                                .build(),
+                                        DataAwsAmiFilter.builder()
+                                                .name("architecture")
+                                                .values(List.of("x86_64"))
+                                                .build()
+                                ))
+                                .owners(List.of("679593333241")) // OpenVPN
+                                .provider(provider)
+                                .build();
+
                         for (int k = 0; k < vpcs.size(); k++) {
 
                             com.hashicorp.cdktf.providers.aws.vpc.Vpc vpcDeployment = null;
@@ -146,6 +208,7 @@ public class MyAwsStack extends TerraformStack {
                             SecurityGroup securityGroup = null;
                             List<SecurityGroup> securityGroupList = new ArrayList<>();
                             Map<String, String> sgMap = new HashMap<>();
+                            Map<String, String> openVpnSgMap = new HashMap<>();
                             Map<String, String> albSgMap = new HashMap<>();
                             Map<String, String> sgIdMap = new HashMap<>();
                             Map<SecurityGroup,List<SgRule>> ingressRulesMap = new HashMap<>();
@@ -194,44 +257,49 @@ public class MyAwsStack extends TerraformStack {
 
                                                 if (tempSg.getName().equals(vpcs.get(k).getSgs().get(sgLoopIndex).getName())) {
 
-                                                    List<SgRule> ingressRulesList = new ArrayList<>();
+                                                        List<SgRule> ingressRulesList = new ArrayList<>();
 
-                                                    securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SG" + sgIndex + vpcIndex + regionIndex)
-                                                            .vpcId(vpcDeployment.getId())
-                                                            .egress(List.of(
-                                                                    SecurityGroupEgress.builder()
-                                                                            .fromPort(0)
-                                                                            .toPort(0)
-                                                                            .protocol("-1")
-                                                                            .cidrBlocks(List.of("0.0.0.0/0"))
-                                                                            .ipv6CidrBlocks(List.of("::/0")).build()
-                                                            ))
-                                                            .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getTagName() + "-" + tempSg.getName())
-                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
-                                                            .provider(provider)
-                                                            .build();
+                                                        securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SG" + sgIndex + vpcIndex + regionIndex)
+                                                                .vpcId(vpcDeployment.getId())
+                                                                .egress(List.of(
+                                                                        SecurityGroupEgress.builder()
+                                                                                .fromPort(0)
+                                                                                .toPort(0)
+                                                                                .protocol("-1")
+                                                                                .cidrBlocks(List.of("0.0.0.0/0"))
+                                                                                .ipv6CidrBlocks(List.of("::/0")).build()
+                                                                ))
+                                                                .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getTagName() + "-" + tempSg.getName())
+                                                                .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
+                                                                .provider(provider)
+                                                                .build();
 
-                                                    for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
-                                                        SgRule rule = new SgRule();
-                                                        rule.setProtocol(tempSg.getSgRules().get(sgRuleIndex).getProtocol());
-                                                        rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
-                                                        rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
-                                                        ingressRulesList.add(rule);
+                                                        for ( int sgRuleIndex = 0; sgRuleIndex<tempSg.getSgRules().size(); sgRuleIndex++){
+                                                            SgRule rule = new SgRule();
+                                                            rule.setProtocol(tempSg.getSgRules().get(sgRuleIndex).getProtocol());
+                                                            rule.setPort(tempSg.getSgRules().get(sgRuleIndex).getPort());
+                                                            rule.setSourceIp(tempSg.getSgRules().get(sgRuleIndex).getSourceIp());
+                                                            ingressRulesList.add(rule);
+                                                        }
+
+                                                        ingressRulesMap.put(securityGroup, ingressRulesList);
+                                                        securityGroupList.add(securityGroup);
+
+                                                        for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
+                                                            sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
+                                                        }
+
+                                                        for (int albNameIndex=0; albNameIndex<tempSg.getAlbs().size(); albNameIndex ++) {
+                                                            albSgMap.put(tempSg.getAlbs().get(albNameIndex).getName(), securityGroup.getId());
+                                                        }
+
+                                                        for (int openVpnNameIndex=0; openVpnNameIndex<tempSg.getOpenvpns().size(); openVpnNameIndex ++) {
+                                                            openVpnSgMap.put(tempSg.getOpenvpns().get(openVpnNameIndex).getName(), securityGroup.getId());
+                                                        }
+
+                                                        sgIdMap.put(tempSg.getName(), securityGroup.getId());
                                                     }
 
-                                                    ingressRulesMap.put(securityGroup, ingressRulesList);
-                                                    securityGroupList.add(securityGroup);
-
-                                                    for (int instanceNameIndex=0; instanceNameIndex<tempSg.getInstances().size(); instanceNameIndex ++){
-                                                        sgMap.put(tempSg.getInstances().get(instanceNameIndex).getName(), securityGroup.getId());
-                                                    }
-
-                                                    for (int albNameIndex=0; albNameIndex<tempSg.getAlbs().size(); albNameIndex ++) {
-                                                        albSgMap.put(tempSg.getAlbs().get(albNameIndex).getName(), securityGroup.getId());
-                                                    }
-
-                                                    sgIdMap.put(tempSg.getName(), securityGroup.getId());
-                                                }
                                             }
 
                                             sgIndex ++;
@@ -455,6 +523,82 @@ public class MyAwsStack extends TerraformStack {
                                     }
 
                                     instanceIndex ++;
+                                }
+
+                                for (int m = 0; m < openvpns.size(); m++) {
+
+                                    for (OpenVPN tempOpenVPN : subnets.get(l).getOpenvpns()) {
+
+                                        if (subnetDeployment != null && tempOpenVPN.getName().equals(openvpns.get(m).getName())
+                                                && tempOpenVPN.getInstanceType().equals(openvpns.get(m).getInstanceType())
+                                                && tempOpenVPN.getKeyPair().equals(openvpns.get(m).getKeyPair())
+                                                && tempOpenVPN.getUserCount().equals(openvpns.get(m).getUserCount())
+                                                && tempOpenVPN.getEphemeralStorage().equals(openvpns.get(m).getEphemeralStorage())) {
+
+                                            if (openvpns.get(m).getUserCount().equals("5")) {
+
+                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
+
+                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                            .instanceType(openvpns.get(m).getInstanceType())
+                                                            .ami(openVpn5.getId())
+                                                            .subnetId(subnetDeployment.getId())
+                                                            .securityGroups(List.of(
+                                                                    openVpnSgMap.get(openvpns.get(m).getName())
+                                                            ))
+                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                            .keyName(openvpns.get(m).getKeyPair())
+                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                            .provider(provider)
+                                                            .build();
+                                                }
+
+                                            } else if (openvpns.get(m).getUserCount().equals("10")) {
+
+                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
+
+                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                            .instanceType(openvpns.get(m).getInstanceType())
+                                                            .ami(openVpn10.getId())
+                                                            .subnetId(subnetDeployment.getId())
+                                                            .securityGroups(List.of(
+                                                                    openVpnSgMap.get(openvpns.get(m).getName())
+                                                            ))
+                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                            .keyName(openvpns.get(m).getKeyPair())
+                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                            .provider(provider)
+                                                            .build();
+                                                }
+
+                                            } else if (openvpns.get(m).getUserCount().equals("25")) {
+
+                                                if (openVpnSgMap.containsKey(openvpns.get(m).getName())){
+
+                                                    Instance.Builder.create(this, openvpns.get(m).getName() + subnets.get(l).getName() + subnets.get(l).getSubnetCidr() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + openVpnIndex)
+                                                            .instanceType(openvpns.get(m).getInstanceType())
+                                                            .ami(openVpn25.getId())
+                                                            .subnetId(subnetDeployment.getId())
+                                                            .securityGroups(List.of(
+                                                                    openVpnSgMap.get(openvpns.get(m).getName())
+                                                            ))
+                                                            .rootBlockDevice(InstanceRootBlockDevice.builder()
+                                                                    .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
+                                                            .keyName(openvpns.get(m).getKeyPair())
+                                                            .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + openvpns.get(m).getTagName()))
+                                                            .userData("admin_user=" + openvpns.get(m).getVpnUsername() + "\nadmin_pw=" + openvpns.get(m).getVpnPasswd())
+                                                            .provider(provider)
+                                                            .build();
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    openVpnIndex ++;
                                 }
 
                                 subnetIndex ++;

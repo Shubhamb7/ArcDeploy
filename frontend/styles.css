@@ -93,6 +93,12 @@
   color: white;
 }
 
+.toolbox-item.openvpn {
+  border: 1px solid #FDA026;
+  background-color: #FDA026;
+  color: white;
+}
+
 .toolbox-item.targetgrp {
   border: 1px solid #F58534;
   background-color: transparent;
@@ -216,6 +222,16 @@
   border-radius: 10px;
 }
 .diagram.ec2:hover {
+  border: 2px solid #3b3a3d;
+}
+
+.diagram.openvpn {
+  background-color: #FDA026;
+  border-color: #FDA026;
+  color: white;
+  border-radius: 10px;
+}
+.diagram.openvpn:hover {
   border: 2px solid #3b3a3d;
 }
 
@@ -360,7 +376,7 @@
 
 .right-click-menu select {
   width: 90%;
-  padding: 2px;
+  padding: 3.8px;
   margin-bottom: 10px;
   font-size: small;
 }
