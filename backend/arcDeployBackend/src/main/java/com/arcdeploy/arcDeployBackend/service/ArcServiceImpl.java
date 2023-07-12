@@ -21,6 +21,8 @@ public class ArcServiceImpl implements ArcService {
     public ArcDto saveArc(ArcDto arcDto) throws IOException, InterruptedException{
 
         arcDtosList.add(arcDto);
+        String bucketName = "arc-deploy-terraform-state";
+        String workingDir = "/opt/app";
 
         String arcName = arcDto.getArc().replaceAll("\\s", "").toLowerCase();
         List<AwsCloud> awsCloud = arcDto.getAws();
@@ -30,16 +32,16 @@ public class ArcServiceImpl implements ArcService {
         awsStack.toTerraform();
         app.synth();
 
-        String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:1.0\n" +
-                "WORKDIR /home/ubuntu/app\n" +
-                "COPY cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + "/cdk.tf.json /home/ubuntu/app/.\n" +
+        String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:3.0\n" +
+                "WORKDIR " + workingDir + "\n" +
+                "COPY cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + "/cdk.tf.json " + workingDir + "/.\n" +
                 "RUN terraform init\n" +
                 "RUN terraform apply --auto-approve\n" +
-                "RUN aws s3 cp terraform." + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + ".tfstate s3://terraform-state-manage-v1/" + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + "/\n" +
-                "RUN aws s3 cp cdk.tf.json s3://terraform-state-manage-v1/" + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + "/";
+                "RUN aws s3 cp terraform." + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + ".tfstate s3://" + bucketName + "/" + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + "/\n" +
+                "RUN aws s3 cp cdk.tf.json s3://" + bucketName + "/" + awsCloud.get(0).getProjectName() + arcName + awsCloud.get(0).getAcId() + "/";
 
         // Specify the path where the Dockerfile will be created
-        Path dockerfilePath = Path.of("/home/ubuntu/app/Dockerfile-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
+        Path dockerfilePath = Path.of(workingDir + "/Dockerfile-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
         Files.createDirectories(dockerfilePath.getParent());
 
         ProcessBuilder pruneProcessBuilder = new ProcessBuilder("docker", "builder", "prune", "--all", "--force");
@@ -51,7 +53,7 @@ public class ArcServiceImpl implements ArcService {
         // Write the content to the Dockerfile
         Files.writeString(dockerfilePath, dockerfileContent, StandardOpenOption.CREATE);
         // Build the Docker image
-        ProcessBuilder imageBuildBuilder = new ProcessBuilder("docker", "build", "-t", awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
+        ProcessBuilder imageBuildBuilder = new ProcessBuilder("docker", "build", "-t", awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), workingDir + "/.");
         imageBuildBuilder.directory(dockerfilePath.getParent().toFile());
         Process imageBuildProcess = imageBuildBuilder.start();
         int exitCode2 = imageBuildProcess.waitFor();
@@ -71,7 +73,7 @@ public class ArcServiceImpl implements ArcService {
         int exitCode4 = noneImageRemoveProcess.waitFor();
         System.out.println("Docker none image removal exited with code: " + exitCode4);
 
-        ProcessBuilder removeCdktfProcessBuilder = new ProcessBuilder("rm", "-rf", "/home/ubuntu/app/cdktf.out");
+        ProcessBuilder removeCdktfProcessBuilder = new ProcessBuilder("rm", "-rf", workingDir + "/cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
         removeCdktfProcessBuilder.directory(dockerfilePath.getParent().toFile());
         Process removeCdktfProcess = removeCdktfProcessBuilder.start();
         int exitCode5 = removeCdktfProcess.waitFor();
@@ -83,16 +85,19 @@ public class ArcServiceImpl implements ArcService {
     @Override
     public Map<String,String> deleteArc(ArcDto arcDto) {
 
+        String bucketName = "arc-deploy-terraform-state";
+        String workingDir = "/opt/app";
+
         try {
             String arcName = arcDto.getArc().replaceAll("\\s", "").toLowerCase();
             List<AwsCloud> awsCloud = arcDto.getAws();
 
-            String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:1.0\n" +
-                    "WORKDIR /home/ubuntu/app\n" +
-                    "RUN ./destroy.sh " + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + " > /dev/null 2>&1";
+            String dockerfileContent = "FROM shubhamb756/ubuntu-terraform:3.0\n" +
+                    "WORKDIR " + workingDir + "\n" +
+                    "RUN ./destroy.sh " + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId() + " " + bucketName + "> /dev/null 2>&1";
 
             // Specify the path where the Dockerfile will be created
-            Path dockerfilePath = Path.of("/home/ubuntu/app/DockerfileDelete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
+            Path dockerfilePath = Path.of(workingDir + "/DockerfileDelete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
             Files.createDirectories(dockerfilePath.getParent());
 
             // Write the content to the Dockerfile
@@ -105,7 +110,7 @@ public class ArcServiceImpl implements ArcService {
             System.out.println("Docker prune builder exited with code: " + exitCode1 + "\n");
 
             // Build the Docker image
-            ProcessBuilder processBuilder = new ProcessBuilder("docker", "build", "-t", "delete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), "/home/ubuntu/app/.");
+            ProcessBuilder processBuilder = new ProcessBuilder("docker", "build", "-t", "delete-" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId(), "-f", dockerfilePath.toString(), workingDir + "/.");
             processBuilder.directory(dockerfilePath.getParent().toFile());
             Process dockerRunProcess = processBuilder.start();
             int exitCode2 = dockerRunProcess.waitFor();
@@ -125,7 +130,7 @@ public class ArcServiceImpl implements ArcService {
             int exitCode4 = noneImageRemoveProcess.waitFor();
             System.out.println("Docker non image removal exited with code: " + exitCode4);
 
-            ProcessBuilder removeCdktfProcessBuilder = new ProcessBuilder("rm", "-rf", "/home/ubuntu/app/cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
+            ProcessBuilder removeCdktfProcessBuilder = new ProcessBuilder("rm", "-rf", workingDir + "/cdktf.out/stacks/" + awsCloud.get(0).getProjectName() + arcName +  awsCloud.get(0).getAcId());
             removeCdktfProcessBuilder.directory(dockerfilePath.getParent().toFile());
             Process removeCdktfProcess = removeCdktfProcessBuilder.start();
             int exitCode5 = removeCdktfProcess.waitFor();

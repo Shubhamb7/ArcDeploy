@@ -1,0 +1,13 @@
+[Unit]
+Description=Arc Deploy Daemon
+Requires=network-online.target
+[Service]
+User=root
+Group=root
+WorkingDirectory=/opt/app/
+Type=simple
+Environment="JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
+ExecStart=/bin/sh -c 'java -jar /opt/app/arcDeployBackend-0.0.1-SNAPSHOT.jar >> /opt/logs/arc-deploy.log 2>&1'
+Restart=on-abnormal
+[Install]
+WantedBy=multi-user.target
