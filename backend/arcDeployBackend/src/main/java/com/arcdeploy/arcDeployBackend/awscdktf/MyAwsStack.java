@@ -4,8 +4,8 @@ import com.arcdeploy.arcDeployBackend.dto.ArcDto;
 import com.arcdeploy.arcDeployBackend.model.*;
 
 import com.hashicorp.cdktf.TerraformStack;
-import com.hashicorp.cdktf.providers.aws.alb_listener.AlbListener;
-import com.hashicorp.cdktf.providers.aws.alb_listener.AlbListenerDefaultAction;
+import com.hashicorp.cdktf.providers.aws.alb_listener.*;
+import com.hashicorp.cdktf.providers.aws.alb_listener_rule.*;
 import com.hashicorp.cdktf.providers.aws.alb_target_group.AlbTargetGroup;
 import com.hashicorp.cdktf.providers.aws.alb_target_group_attachment.AlbTargetGroupAttachment;
 import com.hashicorp.cdktf.providers.aws.eip.Eip;
@@ -54,6 +54,8 @@ public class MyAwsStack extends TerraformStack {
         int sgIndex = 0;
         int instanceIndex = 0;
         int openVpnIndex = 0;
+        int listenerIndex = 0;
+        int listenerRuleIndex = 0;
 
         for (int i = 0; i < awsClouds.size(); i++) {
 
@@ -219,6 +221,7 @@ public class MyAwsStack extends TerraformStack {
                             Map<String, AlbTargetGroup> tgMap = new HashMap<>();
                             Map<String, String> tgDeploymentArnMap = new HashMap<>();
                             List<com.hashicorp.cdktf.providers.aws.alb.Alb> albList = new ArrayList<>();
+                            Map<String,String> listenerMap = new HashMap<>();
 
                             for (Vpc tempVpc: regions.get(j).getVpcs()){
 
@@ -652,7 +655,6 @@ public class MyAwsStack extends TerraformStack {
                                 }
                             }
 
-                            int listenerIndex = 0;
                             for (Vpc tempVpc: regions.get(j).getVpcs()) {
                                 if (tempVpc.getName().equals(vpcs.get(k).getName())
                                         && tempVpc.getCidr().equals(vpcs.get(k).getCidr())) {
@@ -667,8 +669,14 @@ public class MyAwsStack extends TerraformStack {
 
                                                     List<String> subnetIds = new ArrayList<>();
 
-                                                    for (String sub: tempAlb.getSubnetIds()) {
-                                                        subnetIds.add(publicSubnetMap.get(sub));
+                                                    try {
+                                                        for (String sub: tempAlb.getSubnetIds()) {
+                                                            subnetIds.add(publicSubnetMap.get(sub));
+                                                        }
+                                                    } catch (Exception e) {
+                                                        for (String sub: tempAlb.getSubnetIds()) {
+                                                            subnetIds.add(privateSubnetMap.get(sub));
+                                                        }
                                                     }
 
                                                     com.hashicorp.cdktf.providers.aws.alb.Alb alb = com.hashicorp.cdktf.providers.aws.alb.Alb.Builder.create(this, tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId())
@@ -683,18 +691,279 @@ public class MyAwsStack extends TerraformStack {
                                                             .build();
 
                                                     for (Listener listener: tempAlb.getListeners()) {
-                                                        AlbListener.Builder.create(this, tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
-                                                                .loadBalancerArn(alb.getArn())
-                                                                .port(Integer.parseInt(listener.getPort()))
-                                                                .protocol(listener.getProtocol())
-                                                                .defaultAction(List.of(
-                                                                        AlbListenerDefaultAction.builder()
-                                                                                .type("forward")
-                                                                                .targetGroupArn(tgDeploymentArnMap.get(listener.getTargetId()))
-                                                                                .build()
-                                                                ))
-                                                                .provider(provider)
-                                                                .build();
+
+                                                        if (listener.getProtocol().equals("HTTP")) {
+
+                                                            if (!listener.getTargetId().isEmpty()) {
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .forward(
+                                                                                                AlbListenerDefaultActionForward.builder()
+                                                                                                        .targetGroup(List.of(
+                                                                                                                AlbListenerDefaultActionForwardTargetGroup.builder()
+                                                                                                                        .arn(tgDeploymentArnMap.get(listener.getTargetId()))
+                                                                                                                        .build()
+                                                                                                        ))
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("forward")
+                                                                                        .targetGroupArn(tgDeploymentArnMap.get(listener.getTargetId()))
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                            if (!listener.getRedirect().isEmpty()) {
+
+                                                                String protocol = listener.getRedirect().split(":")[0];
+                                                                String port = listener.getRedirect().split(":")[1];
+                                                                String code = listener.getRedirect().split(":")[2];
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .redirect(
+                                                                                                AlbListenerDefaultActionRedirect.builder()
+                                                                                                        .statusCode("HTTP_" + code)
+                                                                                                        .protocol(protocol)
+                                                                                                        .port(port)
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("redirect")
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                            if (!listener.getFixedResponse().isEmpty()) {
+
+                                                                String code = listener.getFixedResponse().split(":")[0];
+                                                                String type = listener.getFixedResponse().split(":")[1];
+                                                                String msg = listener.getFixedResponse().split(":")[2];
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .fixedResponse(
+                                                                                                AlbListenerDefaultActionFixedResponse.builder()
+                                                                                                        .statusCode(code)
+                                                                                                        .contentType(type)
+                                                                                                        .messageBody(msg)
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("fixed-response")
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                        } else {
+
+                                                            if (!listener.getTargetId().isEmpty()) {
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .certificateArn(listener.getCertArn())
+                                                                        .sslPolicy("ELBSecurityPolicy-TLS13-1-2-2021-06")
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .forward(
+                                                                                                AlbListenerDefaultActionForward.builder()
+                                                                                                        .targetGroup(List.of(
+                                                                                                                AlbListenerDefaultActionForwardTargetGroup.builder()
+                                                                                                                        .arn(tgDeploymentArnMap.get(listener.getTargetId()))
+                                                                                                                        .build()
+                                                                                                        ))
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("forward")
+                                                                                        .targetGroupArn(tgDeploymentArnMap.get(listener.getTargetId()))
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                            if (!listener.getRedirect().isEmpty()) {
+
+                                                                String protocol = listener.getRedirect().split(":")[0];
+                                                                String port = listener.getRedirect().split(":")[1];
+                                                                String code = listener.getRedirect().split(":")[2];
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .certificateArn(listener.getCertArn())
+                                                                        .sslPolicy("ELBSecurityPolicy-TLS13-1-2-2021-06")
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .redirect(
+                                                                                                AlbListenerDefaultActionRedirect.builder()
+                                                                                                        .statusCode("HTTP_" + code)
+                                                                                                        .protocol(protocol)
+                                                                                                        .port(port)
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("redirect")
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                            if (!listener.getFixedResponse().isEmpty()) {
+
+                                                                String code = listener.getFixedResponse().split(":")[0];
+                                                                String type = listener.getFixedResponse().split(":")[1];
+                                                                String msg = listener.getFixedResponse().split(":")[2];
+
+                                                                AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
+                                                                        .loadBalancerArn(alb.getArn())
+                                                                        .port(Integer.parseInt(listener.getPort()))
+                                                                        .protocol(listener.getProtocol())
+                                                                        .certificateArn(listener.getCertArn())
+                                                                        .sslPolicy("ELBSecurityPolicy-TLS13-1-2-2021-06")
+                                                                        .defaultAction(List.of(
+                                                                                AlbListenerDefaultAction.builder()
+                                                                                        .fixedResponse(
+                                                                                                AlbListenerDefaultActionFixedResponse.builder()
+                                                                                                        .statusCode(code)
+                                                                                                        .contentType(type)
+                                                                                                        .messageBody(msg)
+                                                                                                        .build()
+                                                                                        )
+                                                                                        .type("fixed-response")
+                                                                                        .build()
+                                                                        ))
+                                                                        .provider(provider)
+                                                                        .build();
+                                                                listenerMap.put(listener.getListenerId(),tempListener.getArn());
+                                                            }
+
+                                                        }
+
+                                                    }
+
+                                                    for (Listener listener: tempAlb.getListeners()) {
+                                                        for (ListenerRule listenerRule: tempAlb.getListenerRules()) {
+                                                            if (listenerRule.getListenerId().equals(listener.getListenerId())) {
+
+                                                                if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("forward")){
+
+                                                                    List<AlbListenerRuleAction> listenerRuleActions = new ArrayList<>();
+
+                                                                    for (String targetId: listenerRule.getTargetIds().split(",")){
+                                                                        listenerRuleActions.add(
+                                                                                AlbListenerRuleAction.builder()
+                                                                                        .type("forward")
+                                                                                        .targetGroupArn(tgDeploymentArnMap.get(targetId))
+                                                                                        .build()
+                                                                        );
+                                                                    }
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .hostHeader(
+                                                                                                    AlbListenerRuleConditionHostHeader.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(listenerRuleActions)
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+
+                                                                if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("redirect")){
+
+                                                                    String protocol = listenerRule.getRedirect().split(":")[0];
+                                                                    String port = listenerRule.getRedirect().split(":")[1];
+                                                                    String code = listener.getRedirect().split(":")[2];
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .hostHeader(
+                                                                                                    AlbListenerRuleConditionHostHeader.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(List.of(
+                                                                                    AlbListenerRuleAction.builder()
+                                                                                            .redirect(
+                                                                                                    AlbListenerRuleActionRedirect.builder()
+                                                                                                            .statusCode("HTTP_" + code)
+                                                                                                            .protocol(protocol)
+                                                                                                            .port(port)
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+
+                                                                if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("fixed-response")){
+
+                                                                    String code = listenerRule.getResponseCode().split(":")[0];
+                                                                    String type = listenerRule.getResponseCode().split(":")[1];
+                                                                    String msg = listenerRule.getResponseCode().split(":")[2];
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .hostHeader(
+                                                                                                    AlbListenerRuleConditionHostHeader.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(List.of(
+                                                                                    AlbListenerRuleAction.builder()
+                                                                                            .fixedResponse(
+                                                                                                    AlbListenerRuleActionFixedResponse.builder()
+                                                                                                            .statusCode(code)
+                                                                                                            .contentType(type)
+                                                                                                            .messageBody(msg)
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
 

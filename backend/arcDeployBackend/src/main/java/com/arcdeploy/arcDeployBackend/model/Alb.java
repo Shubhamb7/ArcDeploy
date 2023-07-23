@@ -17,4 +17,5 @@ public class Alb {
     private String type;
     private List<String> subnetIds;
     private List<Listener> listeners;
+    private List<ListenerRule> listenerRules;
 }

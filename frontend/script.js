@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (diagramText === 'NAT') {
       diagramElement.classList.add('nat');
       diagramElement.dataset.uuid = 'nat-' + generateUUID();
-    } else if (diagramText === 'Subnet') {
+    } else if (diagramText === 'Public Subnet') {
       diagramElement.classList.add('subnet');
       diagramElement.dataset.uuid = 'subnet-' + generateUUID();
     } else if (diagramText === 'Private Subnet') {
@@ -143,12 +143,27 @@ document.addEventListener('DOMContentLoaded', () => {
       isResizing = false;
     });
 
+    
     let protocolsData = [];
     let portsData = [];
     let sourceIpsData = [];
+
+    let albListenerIdsData = [];
     let albProtocolsData = [];
+    let albCertArnsData = [];
     let albPortsData = [];
+    let albActionsData = [];
     let albTargetIdsData = [];
+    let albRedirectsData = [];
+    let albResponseCodesData = [];
+
+    let listenerRuleIdsData = [];
+    let listenerRuleConditionsData = [];
+    let listenerRuleValuesData = [];
+    let listenerRuleActionsData = [];
+    let listenerRuleTargetIdsData = [];
+    let listenerRuleRedirectsData = [];
+    let listenerRuleResponseCodesData = [];
 
     diagramElement.addEventListener('contextmenu', (event) => {
       if (event.button === 2 && diagramElement.classList.contains('awscloud')) {
@@ -849,7 +864,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const diagramElement = event.target;
         let tgInstances = diagramElement.tgInstances || [];
-        const tgName = diagramElement.dataset.tgName || 'TG1';
         const tgProtocol = diagramElement.dataset.tgProtocol || '';
         const tgPort = diagramElement.dataset.tgPort || '';
         const tgProtocolVer = diagramElement.dataset.tgProtocolVer || '';
@@ -868,13 +882,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tgUuidInput.className = 'uuid-aws-tg';
         tgUuidInput.value = tgUuid;
         tgUuidInput.disabled = true;
-
-        const tgNameLabel = document.createElement('label');
-        tgNameLabel.textContent = 'Target Group Name: ';
-        const tgNameInput = document.createElement('input');
-        tgNameInput.type = 'text';
-        tgNameInput.className = 'input-tg-name';
-        tgNameInput.value = tgName;
 
         const tgProtocolLabel = document.createElement('label');
         tgProtocolLabel.textContent = 'Protocol: ';
@@ -933,8 +940,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         contextMenu.appendChild(tgUuidLabel);
         contextMenu.appendChild(tgUuidInput);
-        contextMenu.appendChild(tgNameLabel);
-        contextMenu.appendChild(tgNameInput);
         contextMenu.appendChild(tgProtocolLabel);
         contextMenu.appendChild(tgProtocolInput);
         contextMenu.appendChild(tgProtocolVersionLabel);
@@ -945,7 +950,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(contextMenu);
     
         okButton.addEventListener('click', () => {
-          diagramElement.dataset.tgName = tgNameInput.value;
           diagramElement.dataset.tgProtocol = tgProtocolInput.value;
           diagramElement.dataset.tgPort = tgPortInput.value;
           diagramElement.dataset.tgProtocolVer = tgProtocolVersionInput.value;
@@ -973,17 +977,33 @@ document.addEventListener('DOMContentLoaded', () => {
         let listeners = diagramElement.listeners || [];
         const albName = diagramElement.dataset.albName || 'ALB1';
         const albSubnetIds = diagramElement.dataset.albSubnetIds || '';
-    
+
         contextMenu = document.createElement('div');
-        contextMenu.className = 'right-click-menu';
+        contextMenu.className = 'right-click-menu-alb';
         contextMenu.style.left = event.clientX + 'px';
         contextMenu.style.top = event.clientY + 'px';
         contextMenu.classList.add("show");
+
+        const AlbColumn1Div = document.createElement("div");
+        AlbColumn1Div.classList.add("columns");
+        contextMenu.appendChild(AlbColumn1Div);
+        const AlbRow1Div = document.createElement("div");
+        AlbRow1Div.classList.add("rows");
+        AlbColumn1Div.appendChild(AlbRow1Div);
+
+        const AlbRow2Div = document.createElement("div");
+        AlbRow2Div.classList.add("rows");
+        AlbColumn1Div.appendChild(AlbRow2Div);
+
+        const AlbRow3Div = document.createElement("div");
+        AlbRow3Div.classList.add("rows");
+        AlbColumn1Div.appendChild(AlbRow3Div);
 
         const albUuid = diagramElement.dataset.uuid;
         const albUuidLabel = document.createElement('label');
         albUuidLabel.textContent = 'ID: ';
         const albUuidInput = document.createElement('input');
+        albUuidInput.style.width = "200px";
         albUuidInput.type = 'text';
         albUuidInput.className = 'uuid-aws-alb';
         albUuidInput.value = albUuid;
@@ -992,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const albNameLabel = document.createElement('label');
         albNameLabel.textContent = 'ALB Name: ';
         const albNameInput = document.createElement('input');
+        albNameInput.style.width = "200px";
         albNameInput.type = 'text';
         albNameInput.className = 'input-alb-name';
         albNameInput.value = albName;
@@ -999,101 +1020,215 @@ document.addEventListener('DOMContentLoaded', () => {
         const albSubnetIdLabel = document.createElement('label');
         albSubnetIdLabel.textContent = 'Subnet IDs: ';
         const albSubnetIdInput = document.createElement('input');
+        albSubnetIdInput.style.width = "200px";
         albSubnetIdInput.type = 'text';
         albSubnetIdInput.className = 'input-alb-subnets';
         albSubnetIdInput.value = albSubnetIds;
 
-        const listenerLabel = document.createElement('label');
-        listenerLabel.textContent = 'Listeners: ';
-
-        contextMenu.appendChild(albUuidLabel);
-        contextMenu.appendChild(albUuidInput);
-        contextMenu.appendChild(albNameLabel);
-        contextMenu.appendChild(albNameInput);
-        contextMenu.appendChild(albSubnetIdLabel);
-        contextMenu.appendChild(albSubnetIdInput);
-        contextMenu.appendChild(listenerLabel);
+        AlbRow1Div.appendChild(albUuidLabel);
+        AlbRow1Div.appendChild(albUuidInput);
+        AlbRow2Div.appendChild(albNameLabel);
+        AlbRow2Div.appendChild(albNameInput);
+        AlbRow3Div.appendChild(albSubnetIdLabel);
+        AlbRow3Div.appendChild(albSubnetIdInput);
         
+        // ################### LISTENERS ##############################
+
+        const listenerNameLabel = document.createElement("label");
+        listenerNameLabel.textContent = "Listeners";
+        listenerNameLabel.style.position = "relative";
+        const lineUnderListenerText = document.createElement("div");
+        lineUnderListenerText.style.position = "absolute";
+        lineUnderListenerText.style.bottom = "-1px";
+        lineUnderListenerText.style.left = "0";
+        lineUnderListenerText.style.width = "100%";
+        lineUnderListenerText.style.height = "1px";
+        lineUnderListenerText.style.background = "#000";
+        contextMenu.appendChild(listenerNameLabel);
+        listenerNameLabel.appendChild(lineUnderListenerText);
+
+        const ListenersDiv = document.createElement("div");
+        ListenersDiv.classList.add("listeners");
+        contextMenu.appendChild(ListenersDiv);
+
+        const ListenerRowsDiv = document.createElement("div");
+        ListenerRowsDiv.classList.add("rows");
+        ListenersDiv.appendChild(ListenerRowsDiv);
+
         const AlbColumnsDiv = document.createElement("div");
         AlbColumnsDiv.classList.add("columns");
-        contextMenu.appendChild(AlbColumnsDiv);
+        ListenerRowsDiv.appendChild(AlbColumnsDiv);
+
+        const listenerColumns = document.createElement("div");
+        listenerColumns.classList.add("listener-column");
+        const listenerLabel = document.createElement("label");
+        listenerLabel.textContent = "Listener ID";
+        listenerLabel.style.color = "#505050";
+        listenerColumns.appendChild(listenerLabel);
+        AlbColumnsDiv.appendChild(listenerColumns);
 
         const protocolColumns = document.createElement("div");
-        protocolColumns.classList.add("column");
+        protocolColumns.classList.add("listener-column");
         const protocolLabel = document.createElement("label");
         protocolLabel.textContent = "Protocol";
         protocolLabel.style.color = "#505050";
+        protocolColumns.style.width = "100px";
         protocolColumns.appendChild(protocolLabel);
         AlbColumnsDiv.appendChild(protocolColumns);
 
         const portColumns = document.createElement("div");
-        portColumns.classList.add("column");
+        portColumns.classList.add("listener-column");
         const portLabel = document.createElement("label");
-        portLabel.textContent = "Port Number";
+        portLabel.textContent = "Port";
         portLabel.style.color = "#505050";
+        portColumns.style.width = "90px";
         portColumns.appendChild(portLabel);
         AlbColumnsDiv.appendChild(portColumns);
+
+        const certificateColumns = document.createElement("div");
+        certificateColumns.classList.add("listener-column");
+        const certificateLabel = document.createElement("label");
+        certificateLabel.textContent = "Certificate ARN";
+        certificateLabel.style.color = "#505050";
+        certificateColumns.style.width = "150px";
+        certificateColumns.appendChild(certificateLabel);
+        AlbColumnsDiv.appendChild(certificateColumns);
         
+        const actionColumns = document.createElement("div");
+        actionColumns.classList.add("listener-column");
+        const actionLabel = document.createElement("label");
+        actionLabel.textContent = "Default Action";
+        actionLabel.style.color = "#505050";
+        actionColumns.style.width = "150px";
+        actionColumns.appendChild(actionLabel);
+        AlbColumnsDiv.appendChild(actionColumns);
+
         const targetIdColumns = document.createElement("div");
-        targetIdColumns.classList.add("column");
+        targetIdColumns.classList.add("listener-column");
         const targetIdLabel = document.createElement("label");
         targetIdLabel.textContent = "Target Id";
         targetIdLabel.style.color = "#505050";
         targetIdColumns.appendChild(targetIdLabel);
         AlbColumnsDiv.appendChild(targetIdColumns);
 
+        const redirectColumns = document.createElement("div");
+        redirectColumns.classList.add("listener-column");
+        const redirectLabel = document.createElement("label");
+        redirectLabel.textContent = "Redirect Protocol:Port:Code";
+        redirectLabel.style.color = "#505050";
+        redirectColumns.style.width = "200px";
+        redirectColumns.appendChild(redirectLabel);
+        AlbColumnsDiv.appendChild(redirectColumns);
+
+        const fixedCodeColumns = document.createElement("div");
+        fixedCodeColumns.classList.add("listener-column");
+        const fixedCodeLabel = document.createElement("label");
+        fixedCodeLabel.textContent = "Response Code:Type:Msg";
+        fixedCodeLabel.style.color = "#505050";
+        fixedCodeColumns.appendChild(fixedCodeLabel);
+        AlbColumnsDiv.appendChild(fixedCodeColumns);
+
         const addButton = document.createElement("button");
-        addButton.textContent = "Add Rule";
-        addButton.addEventListener("click", addRow);
-    
-        const okButton = document.createElement('button');
-        okButton.textContent = 'OK';
-    
-        okButton.addEventListener('click', () => {
-          diagramElement.dataset.albName = albNameInput.value;
-          diagramElement.dataset.albSubnetIds = albSubnetIdInput.value;
+        addButton.textContent = "Add Listener";
+        addButton.addEventListener("click", addListenerRow);
 
-          const albProtocols = Array.from(document.querySelectorAll(".alb-protocol-input")).map(
-            (input) => input.value
-          );
-          const albPorts = Array.from(document.querySelectorAll(".alb-port-input")).map(
-            (input) => input.value
-          );
-          const albTargetIds = Array.from(document.querySelectorAll(".alb-target-id-input")).map(
-            (input) => input.value
-          );
-        
-          const objectArray = [];
-          const newProtocolsData = [];
-          const newPortsData = [];
-          const newTargetIdsData = [];
-          for (let i = 0; i < albPorts.length; i++) {
-            const object = {
-              protocol: albProtocols[i],
-              port: albPorts[i],
-              targetId: albTargetIds[i]
-            };
-            newProtocolsData.push(object.protocol)
-            newPortsData.push(object.port)
-            newTargetIdsData.push(object.targetId)
-            objectArray.push(object);
-          }
+        // ################### LISTENER RULE ##############################
 
-          albProtocolsData = newProtocolsData;
-          albPortsData = newPortsData;
-          albTargetIdsData = newTargetIdsData;
-          diagramElement.listeners = objectArray;
-          closeContextMenu(); 
-        });
-    
-        contextMenu.appendChild(addButton);
-        contextMenu.appendChild(okButton);
-    
-        document.body.appendChild(contextMenu);
+        const listenerRuleNameLabel = document.createElement("label");
+        listenerRuleNameLabel.textContent = "Listener Rules";
+        listenerRuleNameLabel.style.position = "relative";
+        const lineUnderText = document.createElement("div");
+        lineUnderText.style.position = "absolute";
+        lineUnderText.style.bottom = "-1px";
+        lineUnderText.style.left = "0";
+        lineUnderText.style.width = "100%";
+        lineUnderText.style.height = "1px";
+        lineUnderText.style.background = "#000";
+        contextMenu.appendChild(listenerRuleNameLabel);
+        listenerRuleNameLabel.appendChild(lineUnderText);
+
+        const ListenerRuleDiv = document.createElement("div");
+        ListenerRuleDiv.classList.add("listener-rules");
+        contextMenu.appendChild(ListenerRuleDiv);
+
+        const ListenerRuleRowsDiv = document.createElement("div");
+        ListenerRuleRowsDiv.classList.add("rows");
+        ListenerRuleDiv.appendChild(ListenerRuleRowsDiv);
+
+        const ListenerRuleColumnsDiv = document.createElement("div");
+        ListenerRuleColumnsDiv.classList.add("columns");
+        ListenerRuleRowsDiv.appendChild(ListenerRuleColumnsDiv);
+
+        const listenerRuleColumns = document.createElement("div");
+        listenerRuleColumns.classList.add("listener-rule-column");
+        const listenerRuleLabel = document.createElement("label");
+        listenerRuleLabel.textContent = "Listener ID";
+        listenerRuleLabel.style.color = "#505050";
+        listenerRuleColumns.appendChild(listenerRuleLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleColumns);
+
+        const listenerRuleConditionColumns = document.createElement("div");
+        listenerRuleConditionColumns.classList.add("listener-rule-column");
+        const listenerRuleConditionLabel = document.createElement("label");
+        listenerRuleConditionLabel.textContent = "Condition";
+        listenerRuleConditionLabel.style.color = "#505050";
+        listenerRuleConditionColumns.style.width = "150px";
+        listenerRuleConditionColumns.appendChild(listenerRuleConditionLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleConditionColumns);
+
+        const listenerRuleConditionValueColumns = document.createElement("div");
+        listenerRuleConditionValueColumns.classList.add("listener-rule-column");
+        const listenerRuleConditionValueLabel = document.createElement("label");
+        listenerRuleConditionValueLabel.textContent = "Value";
+        listenerRuleConditionValueLabel.style.color = "#505050";
+        listenerRuleConditionValueColumns.appendChild(listenerRuleConditionValueLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleConditionValueColumns);
+
+        const listenerRuleActionColumns = document.createElement("div");
+        listenerRuleActionColumns.classList.add("listener-rule-column");
+        const listenerRuleActionLabel = document.createElement("label");
+        listenerRuleActionLabel.textContent = "Action";
+        listenerRuleActionLabel.style.color = "#505050";
+        listenerRuleActionColumns.style.width = "150px";
+        listenerRuleActionColumns.appendChild(listenerRuleActionLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleActionColumns);
+
+        const listenerRuleTargetIdColumns = document.createElement("div");
+        listenerRuleTargetIdColumns.classList.add("listener-rule-column");
+        const listenerRuleTargetIdLabel = document.createElement("label");
+        listenerRuleTargetIdLabel.textContent = "Target Id";
+        listenerRuleTargetIdLabel.style.color = "#505050";
+        listenerRuleTargetIdColumns.appendChild(listenerRuleTargetIdLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleTargetIdColumns);
+
+        const listenerRuleRedirectColumns = document.createElement("div");
+        listenerRuleRedirectColumns.classList.add("listener-rule-column");
+        const listenerRuleRedirectLabel = document.createElement("label");
+        listenerRuleRedirectLabel.textContent = "Redirect Protocol:Port:Code";
+        listenerRuleRedirectLabel.style.color = "#505050";
+        listenerRuleRedirectColumns.style.width = "200px";
+        listenerRuleRedirectColumns.appendChild(listenerRuleRedirectLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleRedirectColumns);
+
+        const listenerRuleFixedCodeColumns = document.createElement("div");
+        listenerRuleFixedCodeColumns.classList.add("listener-rule-column");
+        const listenerRuleFixedCodeLabel = document.createElement("label");
+        listenerRuleFixedCodeLabel.textContent = "Response Code:Type:Msg";
+        listenerRuleFixedCodeLabel.style.color = "#505050";
+        listenerRuleFixedCodeColumns.appendChild(listenerRuleFixedCodeLabel);
+        ListenerRuleColumnsDiv.appendChild(listenerRuleFixedCodeColumns);
 
         for (let i = 0; i < albPortsData.length; i++) {
 
+          const listenerInput = document.createElement("input");
+          listenerInput.type = "text";
+          listenerInput.className = "alb-listener-id-input";
+          listenerInput.value = getDataByIndex(0, i);
+          listenerInput.disabled = true
+          listenerColumns.appendChild(listenerInput);
+
           const protocolInput = document.createElement("select");
+          protocolInput.style.width = "70px";
           protocolInput.className = "alb-protocol-input";
           const albHttpOption = document.createElement('option');
           albHttpOption.value = 'HTTP';
@@ -1103,40 +1238,341 @@ document.addEventListener('DOMContentLoaded', () => {
           albHttpsOption.textContent = 'HTTPS';
           protocolInput.appendChild(albHttpOption);
           protocolInput.appendChild(albHttpsOption);
-          protocolInput.value = getDataByIndex(0, i);
+          protocolInput.value = getDataByIndex(1, i);
+          protocolColumns.style.width = "100px";
           protocolColumns.appendChild(protocolInput);
 
           const portInput = document.createElement("input");
+          portInput.style.width = "60px";
           portInput.type = "text";
           portInput.className = "alb-port-input";
-          portInput.value = getDataByIndex(1, i);
+          portInput.value = getDataByIndex(3, i);
+          portColumns.style.width = "90px";
           portColumns.appendChild(portInput);
+
+          const certArnInput = document.createElement("input");
+          certArnInput.style.width = "120px";
+          certArnInput.type = "text";
+          certArnInput.className = "alb-cert-input";
+          certArnInput.value = getDataByIndex(2, i);
+          certificateColumns.style.width = "150px";
+          certificateColumns.appendChild(certArnInput);
       
+          const actionInput = document.createElement("select");
+          actionInput.style.width = "120px";
+          actionInput.className = "alb-action-input";
+          const forwardActionOption = document.createElement('option');
+          forwardActionOption.value = 'forward';
+          forwardActionOption.textContent = 'forward';
+          const redirectActionOption = document.createElement('option');
+          redirectActionOption.value = 'redirect';
+          redirectActionOption.textContent = 'redirect';
+          const fixedResponseActionOption = document.createElement('option');
+          fixedResponseActionOption.value = 'fixed-response';
+          fixedResponseActionOption.textContent = 'fixed-response';
+          actionInput.appendChild(forwardActionOption);
+          actionInput.appendChild(redirectActionOption);
+          actionInput.appendChild(fixedResponseActionOption);
+          actionInput.value = getDataByIndex(4, i);
+          actionColumns.style.width = "150px";
+          actionColumns.appendChild(actionInput);
+
           const targetIdInput = document.createElement("input");
           targetIdInput.type = "text";
           targetIdInput.className = "alb-target-id-input";
-          targetIdInput.value = getDataByIndex(2, i);
+          targetIdInput.value = getDataByIndex(5, i);
           targetIdColumns.appendChild(targetIdInput);
+
+          const redirectInput = document.createElement("input");
+          redirectInput.type = "text";
+          redirectInput.className = "alb-redirect-input";
+          redirectInput.value = getDataByIndex(6, i);
+          redirectColumns.appendChild(redirectInput);
+
+          const fixedResponceCodeInput = document.createElement("input");
+          fixedResponceCodeInput.type = "text";
+          fixedResponceCodeInput.className = "alb-fixed-response-input";
+          fixedResponceCodeInput.value = getDataByIndex(7, i);
+          fixedCodeColumns.appendChild(fixedResponceCodeInput);
         }
+
+        for (let i = 0; i < listenerRuleConditionsData.length; i++) {
+
+          const listenerRuleIdInput = document.createElement("input");
+          listenerRuleIdInput.type = "text";
+          listenerRuleIdInput.className = "listener-rule-id-input";
+          listenerRuleIdInput.value = getListenerRulesDataByIndex(0, i);
+          listenerRuleColumns.appendChild(listenerRuleIdInput);
+
+          const listenerRuleConditionInput = document.createElement("select");
+          listenerRuleConditionInput.style.width = "120px";
+          listenerRuleConditionInput.className = "listener-rule-condition-input";
+          const httpHeaderConditionOption = document.createElement('option');
+          httpHeaderConditionOption.value = 'http_header';
+          httpHeaderConditionOption.textContent = 'http header';
+          const pathConditionOption = document.createElement('option');
+          pathConditionOption.value = 'path_pattern';
+          pathConditionOption.textContent = 'path pattern';
+          const hostHeaderConditionOption = document.createElement('option');
+          hostHeaderConditionOption.value = 'host_header';
+          hostHeaderConditionOption.textContent = 'host header';
+          const sourceIpConditionOption = document.createElement('option');
+          sourceIpConditionOption.value = 'source_ip';
+          sourceIpConditionOption.textContent = 'source ip';
+          listenerRuleConditionInput.appendChild(hostHeaderConditionOption);
+          listenerRuleConditionInput.appendChild(httpHeaderConditionOption);
+          listenerRuleConditionInput.appendChild(pathConditionOption);
+          // listenerRuleConditionInput.appendChild(sourceIpConditionOption);
+          listenerRuleConditionInput.value = getListenerRulesDataByIndex(1, i);
+          listenerRuleConditionColumns.style.width = "150px";
+          listenerRuleConditionColumns.appendChild(listenerRuleConditionInput);
+
+          const listenerRuleValueInput = document.createElement("input");
+          listenerRuleValueInput.type = "text";
+          listenerRuleValueInput.className = "listener-rule-value-input";
+          listenerRuleValueInput.value = getListenerRulesDataByIndex(2, i);
+          listenerRuleConditionValueColumns.appendChild(listenerRuleValueInput);
+
+          const listenerRuleActionInput = document.createElement("select");
+          listenerRuleActionInput.style.width = "120px";
+          listenerRuleActionInput.className = "listener-rule-action-input";
+          const forwardActionOption = document.createElement('option');
+          forwardActionOption.value = 'forward';
+          forwardActionOption.textContent = 'forward';
+          const redirectActionOption = document.createElement('option');
+          redirectActionOption.value = 'redirect';
+          redirectActionOption.textContent = 'redirect';
+          const fixedResponseActionOption = document.createElement('option');
+          fixedResponseActionOption.value = 'fixed-response';
+          fixedResponseActionOption.textContent = 'fixed-response';
+          listenerRuleActionInput.appendChild(forwardActionOption);
+          listenerRuleActionInput.appendChild(redirectActionOption);
+          listenerRuleActionInput.appendChild(fixedResponseActionOption);
+          listenerRuleActionInput.value = getListenerRulesDataByIndex(3, i);
+          listenerRuleActionColumns.style.width = "150px";
+          listenerRuleActionColumns.appendChild(listenerRuleActionInput);
+          
+          const listenerRuleTargetIdInput = document.createElement("input");
+          listenerRuleTargetIdInput.type = "text";
+          listenerRuleTargetIdInput.className = "listener-rule-forward-input";
+          listenerRuleTargetIdInput.value = getListenerRulesDataByIndex(4, i);
+          listenerRuleTargetIdColumns.appendChild(listenerRuleTargetIdInput);
+
+          const listenerRuleRedirectInput = document.createElement("input");
+          listenerRuleRedirectInput.type = "text";
+          listenerRuleRedirectInput.className = "listener-rule-redirect-input";
+          listenerRuleRedirectInput.value = getListenerRulesDataByIndex(5, i);
+          listenerRuleRedirectColumns.appendChild(listenerRuleRedirectInput);
+
+          const listenerRuleResponseCodeInput = document.createElement("input");
+          listenerRuleResponseCodeInput.type = "text";
+          listenerRuleResponseCodeInput.className = "listener-rule-fixed-response-input";
+          listenerRuleResponseCodeInput.value = getListenerRulesDataByIndex(6, i);
+          listenerRuleFixedCodeColumns.appendChild(listenerRuleResponseCodeInput);
+        }
+
+        const addRuleButton = document.createElement("button");
+        addRuleButton.textContent = "Add Listener Rule";
+        addRuleButton.addEventListener("click", addListenerRuleRow);
+    
+        const okButton = document.createElement('button');
+        okButton.textContent = 'OK';
+
+        contextMenu.appendChild(addButton);
+        contextMenu.appendChild(addRuleButton);
+        contextMenu.appendChild(okButton);
+        document.body.appendChild(contextMenu);
+    
+        okButton.addEventListener('click', () => {
+          diagramElement.dataset.albName = albNameInput.value;
+          diagramElement.dataset.albSubnetIds = albSubnetIdInput.value;
+
+          const albListenerIds = Array.from(document.querySelectorAll(".alb-listener-id-input")).map(
+            (input) => input.value
+          );
+          const albProtocols = Array.from(document.querySelectorAll(".alb-protocol-input")).map(
+            (input) => input.value
+          );
+          const albCertArns = Array.from(document.querySelectorAll(".alb-cert-input")).map(
+            (input) => input.value
+          );
+          const albPorts = Array.from(document.querySelectorAll(".alb-port-input")).map(
+            (input) => input.value
+          );
+          const albActions = Array.from(document.querySelectorAll(".alb-action-input")).map(
+            (input) => input.value
+          );
+          const albTargetIds = Array.from(document.querySelectorAll(".alb-target-id-input")).map(
+            (input) => input.value
+          );
+          const albRedirects = Array.from(document.querySelectorAll(".alb-redirect-input")).map(
+            (input) => input.value
+          );
+          const albFixedResponses = Array.from(document.querySelectorAll(".alb-fixed-response-input")).map(
+            (input) => input.value
+          );
+
+          const listenerRuleIds = Array.from(document.querySelectorAll(".listener-rule-id-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleConditions = Array.from(document.querySelectorAll(".listener-rule-condition-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleValues = Array.from(document.querySelectorAll(".listener-rule-value-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleActions = Array.from(document.querySelectorAll(".listener-rule-action-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleTargetIds = Array.from(document.querySelectorAll(".listener-rule-forward-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleRedirects = Array.from(document.querySelectorAll(".listener-rule-redirect-input")).map(
+            (input) => input.value
+          );
+          const listenerRuleResponseCodes = Array.from(document.querySelectorAll(".listener-rule-fixed-response-input")).map(
+            (input) => input.value
+          );
+        
+          const objectArray = [];
+          const newAlbListenerIdsData = [];
+          const newProtocolsData = [];
+          const newCertArnsData = [];
+          const newPortsData = [];
+          const newActionsData = [];
+          const newTargetIdsData = [];
+          const newRedirectsData = [];
+          const newFixedResponsesData = [];
+
+          const ruleObjectArray = [];
+          const newListenerRuleIdsData = [];
+          const newListenerRuleConditionsData = [];
+          const newListenerRuleValuesData = [];
+          const newListenerRuleActionsData = [];
+          const newListenerRuleTargetIdsData = [];
+          const newListenerRuleRedirectsData = [];
+          const newListenerResponseCodesData = [];
+
+          for (let i = 0; i < albProtocols.length; i++) {
+            const object = {
+              listenerId: albListenerIds[i],
+              protocol: albProtocols[i],
+              certArn: albCertArns[i],
+              port: albPorts[i],
+              action: albActions[i],
+              targetId: albTargetIds[i],
+              redirect: albRedirects[i],
+              fixedResponse: albFixedResponses[i]
+            };
+            newAlbListenerIdsData.push(object.listenerId)
+            newProtocolsData.push(object.protocol)
+            newCertArnsData.push(object.certArn)
+            newPortsData.push(object.port)
+            newActionsData.push(object.action)
+            newTargetIdsData.push(object.targetId)
+            newRedirectsData.push(object.redirect)
+            newFixedResponsesData.push(object.fixedResponse)
+            objectArray.push(object);
+          }
+
+          for (let i = 0; i < listenerRuleIds.length; i++) {
+            const object = {
+              listenerId: listenerRuleIds[i],
+              condition: listenerRuleConditions[i],
+              value: listenerRuleValues[i],
+              action: listenerRuleActions[i],
+              targetIds: listenerRuleTargetIds[i],
+              redirect: listenerRuleRedirects[i],
+              responseCode: listenerRuleResponseCodes[i]
+            };
+            newListenerRuleIdsData.push(object.listenerId);
+            newListenerRuleConditionsData.push(object.condition);
+            newListenerRuleValuesData.push(object.value);
+            newListenerRuleActionsData.push(object.action);
+            newListenerRuleTargetIdsData.push(object.targetIds);
+            newListenerRuleRedirectsData.push(object.redirect);
+            newListenerResponseCodesData.push(object.responseCode);
+            ruleObjectArray.push(object);
+          }
+
+          albListenerIdsData = newAlbListenerIdsData;
+          albProtocolsData = newProtocolsData;
+          albCertArnsData = newCertArnsData;
+          albPortsData = newPortsData;
+          albActionsData = newActionsData;
+          albTargetIdsData = newTargetIdsData;
+          albRedirectsData = newRedirectsData;
+          albResponseCodesData = newFixedResponsesData;
+          diagramElement.listeners = objectArray;
+
+          listenerRuleIdsData = newListenerRuleIdsData;
+          listenerRuleConditionsData = newListenerRuleConditionsData;
+          listenerRuleValuesData = newListenerRuleValuesData;
+          listenerRuleActionsData = newListenerRuleActionsData;
+          listenerRuleTargetIdsData = newListenerRuleTargetIdsData;
+          listenerRuleRedirectsData = newListenerRuleRedirectsData;
+          listenerRuleResponseCodesData = newListenerResponseCodesData;
+          diagramElement.listenerRules = ruleObjectArray;
+          closeContextMenu(); 
+        });    
 
         function getDataByIndex(index, i) {
           if (index === 0) {
-            return albProtocolsData[i] || "";
+            return albListenerIdsData[i] || "";
           } else if (index === 1) {
-            return albPortsData[i] || "";
+            return albProtocolsData[i] || "";
           } else if (index === 2) {
+            return albCertArnsData[i] || "";
+          } else if (index === 3) {
+            return albPortsData[i] || "";
+          } else if (index === 4) {
+            return albActionsData[i] || "";
+          } else if (index === 5) {
             return albTargetIdsData[i] || "";
+          } else if (index === 6) {
+            return albRedirectsData[i] || "";
+          } else if (index === 7) {
+            return albResponseCodesData[i] || "";
           }
         }
-        
-        function addRow() {
-          const columns = document.querySelectorAll(".column");
-          const classNames = ["alb-protocol-input", "alb-port-input", "alb-target-id-input"];
+
+        function getListenerRulesDataByIndex(index, i) {
+          if (index === 0) {
+            return listenerRuleIdsData[i] || "";
+          } else if (index === 1) {
+            return listenerRuleConditionsData[i] || "";
+          } else if (index === 2) {
+            return listenerRuleValuesData[i] || "";
+          } else if (index === 3) {
+            return listenerRuleActionsData[i] || "";
+          } else if (index === 4) {
+            return listenerRuleTargetIdsData[i] || "";
+          } else if (index === 5) {
+            return listenerRuleRedirectsData[i] || "";
+          } else if (index === 6) {
+            return listenerRuleResponseCodesData[i] || "";
+          }
+        }
+
+        function addListenerRow() {
+          const ListenerRowsDiv = document.createElement("div");
+          ListenerRowsDiv.classList.add("rows");
+          ListenersDiv.appendChild(ListenerRowsDiv);
+
+          const AlbColumnsDiv = document.createElement("div");
+          AlbColumnsDiv.classList.add("columns");
+          ListenerRowsDiv.appendChild(AlbColumnsDiv);
+
+          const classNames = ["alb-listener-id-input", "alb-protocol-input", "alb-port-input", "alb-cert-input", "alb-action-input", "alb-target-id-input", "alb-redirect-input", "alb-fixed-response-input"];
+          for (const classname of classNames) {
+            const column = document.createElement("div");
+            column.classList.add("listener-column");
           
-          columns.forEach((column, index) => {
-            if (classNames[index] === "alb-protocol-input") {
+            if (classname === "alb-protocol-input") {
               const input = document.createElement("select");
-              input.className = classNames[index];
+              input.style.width = "70px";
+              column.style.width = "100px";
+              input.className = classname;
               const albHttpOption = document.createElement('option');
               albHttpOption.value = 'HTTP';
               albHttpOption.textContent = 'HTTP';
@@ -1146,15 +1582,136 @@ document.addEventListener('DOMContentLoaded', () => {
               input.appendChild(albHttpOption);
               input.appendChild(albHttpsOption);
               column.appendChild(input);
+            } else if (classname === "alb-listener-id-input") {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.value = 'list-' + generateUUID();
+              input.className = classname;
+              input.disabled = true;
+              column.appendChild(input);
+            } else if (classname === "alb-port-input") {
+              const input = document.createElement("input");
+              input.style.width = "60px";
+              column.style.width = "90px";
+              input.type = "text";
+              input.className = classname;
+              column.appendChild(input);
+            } else if (classname === "alb-cert-input") {
+              const input = document.createElement("input");
+              input.style.width = "120px";
+              column.style.width = "150px";
+              input.type = "text";
+              input.className = classname;
+              column.appendChild(input);
+            } else if (classname === "alb-action-input") {
+              const input = document.createElement("select");
+              input.style.width = "120px";
+              column.style.width = "150px";
+              input.className = classname;
+              const forwardActionOption = document.createElement('option');
+              forwardActionOption.value = 'forward';
+              forwardActionOption.textContent = 'forward';
+              const redirectActionOption = document.createElement('option');
+              redirectActionOption.value = 'redirect';
+              redirectActionOption.textContent = 'redirect';
+              const fixedResponseActionOption = document.createElement('option');
+              fixedResponseActionOption.value = 'fixed-response';
+              fixedResponseActionOption.textContent = 'fixed-response';
+              input.appendChild(forwardActionOption);
+              input.appendChild(redirectActionOption);
+              input.appendChild(fixedResponseActionOption);
+              column.appendChild(input);
+            } else if (classname === "alb-redirect-input") {
+              const input = document.createElement("input");
+              input.style.width = "170px";
+              column.style.width = "200px";
+              input.type = "text";
+              input.className = classname;
+              column.appendChild(input);
             } else {
               const input = document.createElement("input");
               input.type = "text";
-              input.className = classNames[index];
+              input.className = classname;
               column.appendChild(input);
             }
-          });
+            
+            AlbColumnsDiv.appendChild(column);
+          }
         }
+        
+        function addListenerRuleRow() {
+          const ListenerRuleRowsDiv = document.createElement("div");
+          ListenerRuleRowsDiv.classList.add("rows");
+          ListenerRuleDiv.appendChild(ListenerRuleRowsDiv);
 
+          const ListenerRuleColumnsDiv = document.createElement("div");
+          ListenerRuleColumnsDiv.classList.add("columns");
+          ListenerRuleRowsDiv.appendChild(ListenerRuleColumnsDiv);
+
+          const classNames = ["listener-rule-id-input", "listener-rule-condition-input", "listener-rule-value-input", "listener-rule-action-input", "listener-rule-forward-input", "listener-rule-redirect-input", "listener-rule-fixed-response-input"];
+          for (const classname of classNames) {
+            const column = document.createElement("div");
+            column.classList.add("listener-rule-column");
+
+            if (classname === "listener-rule-condition-input") {
+              const input = document.createElement("select");
+              input.style.width = "120px";
+              column.style.width = "150px";
+              input.className = classname;
+              const httpHeaderConditionOption = document.createElement('option');
+              httpHeaderConditionOption.value = 'http_header';
+              httpHeaderConditionOption.textContent = 'http header';
+              const pathConditionOption = document.createElement('option');
+              pathConditionOption.value = 'path_pattern';
+              pathConditionOption.textContent = 'path pattern';
+              const hostHeaderConditionOption = document.createElement('option');
+              hostHeaderConditionOption.value = 'host_header';
+              hostHeaderConditionOption.textContent = 'host header';
+              const sourceIpConditionOption = document.createElement('option');
+              sourceIpConditionOption.value = 'source_ip';
+              sourceIpConditionOption.textContent = 'source ip';
+              input.appendChild(hostHeaderConditionOption);
+              input.appendChild(httpHeaderConditionOption);
+              input.appendChild(pathConditionOption);
+              // input.appendChild(sourceIpConditionOption);
+              column.appendChild(input);
+
+            } else if (classname === "listener-rule-action-input") {
+              const input = document.createElement("select");
+              input.style.width = "120px";
+              column.style.width = "150px";
+              input.className = classname;
+              const forwardActionOption = document.createElement('option');
+              forwardActionOption.value = 'forward';
+              forwardActionOption.textContent = 'forward';
+              const redirectActionOption = document.createElement('option');
+              redirectActionOption.value = 'redirect';
+              redirectActionOption.textContent = 'redirect';
+              const fixedResponseActionOption = document.createElement('option');
+              fixedResponseActionOption.value = 'fixed-response';
+              fixedResponseActionOption.textContent = 'fixed-response';
+              input.appendChild(forwardActionOption);
+              input.appendChild(redirectActionOption);
+              input.appendChild(fixedResponseActionOption);
+              column.appendChild(input);
+
+            } else if (classname === "listener-rule-redirect-input") {
+              const input = document.createElement("input");
+              input.style.width = "170px";
+              column.style.width = "200px";
+              input.type = "text";
+              input.className = classname;
+              column.appendChild(input);
+            } else {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.className = classname;
+              column.appendChild(input);
+            }
+
+            ListenerRuleColumnsDiv.appendChild(column);
+          }
+        }
       }
     });
     drawingArea.appendChild(diagramElement);
@@ -1167,9 +1724,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(json);
     const url = 'http://54.176.126.43:8080/arc';
 
-    trackButton.disabled = true;
-    trackButton.textContent = 'Deploying...';
-
     fetch(url, {
       method: 'POST',
       headers: {
@@ -1180,13 +1734,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(result => {
         console.log('Response:', result);
-        trackButton.disabled = false;
-        trackButton.textContent = 'Deploy';
       })
       .catch(error => {
         console.error('Error:', error);
-        trackButton.disabled = false;
-        trackButton.textContent = 'Deploy';
       });
     
   });
@@ -1198,9 +1748,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(json);
     const url = 'http://54.176.126.43:8080/arc';
 
-    destroyButton.disabled = true;
-    destroyButton.textContent = 'Destroying...';
-
     fetch(url, {
       method: 'DELETE',
       headers: {
@@ -1211,13 +1758,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(response => response.json())
       .then(result => {
         console.log('Response:', result);
-        destroyButton.disabled = false;
-        destroyButton.textContent = 'Destroy';
       })
       .catch(error => {
         console.error('Error:', error);
-        destroyButton.disabled = false;
-        destroyButton.textContent = 'Destroy';
       });
     
   });
@@ -1392,13 +1935,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (type === 'ALB') {
         const listeners = child.listeners || [];
         const subnetIds = child.dataset.albSubnetIds.split(',') || [];
+        const listenerRules = child.listenerRules || [];
   
         const alb = {
           name,
           tagName,
           type,
           subnetIds,
-          listeners
+          listeners,
+          listenerRules
         };
   
         albs.push(alb);
@@ -1613,7 +2158,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tagName: alb.textContent.trim(),
             type: 'ALB',
             subnetIds: alb.dataset.albSubnetIds.split(',') || [],
-            listeners: alb.listeners || []
+            listeners: alb.listeners || [],
+            listenerRules: alb.listenerRules || []
           }));
 
         vpc.subnets.push(...vpcSubnets);

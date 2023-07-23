@@ -325,7 +325,7 @@
 
 .context-menu button {
   padding: 5px 10px;
-  border-radius: 10%;
+  border-radius: 10px;
   background-color: #4caf50;
   color: #fff;
   border: none;
@@ -384,7 +384,74 @@
 .right-click-menu button {
   margin-right: 5px;
   padding: 5px 10px;
-  border-radius: 10%;
+  border-radius: 10px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+}
+
+/* ============== ALB RIGHT CLICK MENU =================== */
+
+.right-click-menu-alb {
+  position: absolute;
+  width: 1150px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: none;
+  z-index: 100;
+}
+
+.right-click-menu-alb.show {
+  display: block;
+}
+
+.right-click-menu-alb .rows {
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
+.right-click-menu-alb .columns {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+}
+
+.right-click-menu-alb .listener-column {
+  width: 180px;
+}
+
+.right-click-menu-alb .listener-rule-column {
+  width: 180px;
+}
+
+.right-click-menu-alb label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: small;
+  font-weight: bold;
+}
+
+.right-click-menu-alb input {
+  width: 150px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.right-click-menu-alb select {
+  width: 150px;
+  padding: 3px;
+  margin-bottom: 10px;
+  font-size: small;
+}
+
+.right-click-menu-alb button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border-radius: 10px;
   background-color: #4caf50;
   color: #fff;
   border: none;

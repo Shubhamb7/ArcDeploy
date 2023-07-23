@@ -11,13 +11,12 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @ToString
-public class Listener {
+public class ListenerRule {
     private String listenerId;
-    private String protocol;
-    private String certArn;
-    private String port;
+    private String condition;
+    private String value;
     private String action;
-    private String targetId;
+    private String targetIds;
     private String redirect;
-    private String fixedResponse;
+    private String responseCode;
 }
