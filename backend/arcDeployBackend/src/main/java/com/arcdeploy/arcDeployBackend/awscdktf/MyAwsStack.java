@@ -724,7 +724,7 @@ public class MyAwsStack extends TerraformStack {
 
                                                                 String protocol = listener.getRedirect().split(":")[0];
                                                                 String port = listener.getRedirect().split(":")[1];
-                                                                String code = listener.getRedirect().split(":")[2];
+//                                                                String code = listener.getRedirect().split(":")[2];
 
                                                                 AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
                                                                         .loadBalancerArn(alb.getArn())
@@ -734,7 +734,7 @@ public class MyAwsStack extends TerraformStack {
                                                                                 AlbListenerDefaultAction.builder()
                                                                                         .redirect(
                                                                                                 AlbListenerDefaultActionRedirect.builder()
-                                                                                                        .statusCode("HTTP_" + code)
+                                                                                                        .statusCode("HTTP_301")
                                                                                                         .protocol(protocol)
                                                                                                         .port(port)
                                                                                                         .build()
@@ -806,9 +806,9 @@ public class MyAwsStack extends TerraformStack {
 
                                                             if (!listener.getRedirect().isEmpty()) {
 
-                                                                String protocol = listener.getRedirect().split(":")[0];
+                                                                String protocol = listener.getRedirect().split(":")[0].toUpperCase();
                                                                 String port = listener.getRedirect().split(":")[1];
-                                                                String code = listener.getRedirect().split(":")[2];
+//                                                                String code = listener.getRedirect().split(":")[2];
 
                                                                 AlbListener tempListener = AlbListener.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + listenerIndex++)
                                                                         .loadBalancerArn(alb.getArn())
@@ -820,7 +820,7 @@ public class MyAwsStack extends TerraformStack {
                                                                                 AlbListenerDefaultAction.builder()
                                                                                         .redirect(
                                                                                                 AlbListenerDefaultActionRedirect.builder()
-                                                                                                        .statusCode("HTTP_" + code)
+                                                                                                        .statusCode("HTTP_301")
                                                                                                         .protocol(protocol)
                                                                                                         .port(port)
                                                                                                         .build()
@@ -899,11 +899,11 @@ public class MyAwsStack extends TerraformStack {
                                                                             .build();
                                                                 }
 
-                                                                if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("redirect")){
+                                                                else if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("redirect")){
 
-                                                                    String protocol = listenerRule.getRedirect().split(":")[0];
+                                                                    String protocol = listenerRule.getRedirect().split(":")[0].toUpperCase();
                                                                     String port = listenerRule.getRedirect().split(":")[1];
-                                                                    String code = listener.getRedirect().split(":")[2];
+//                                                                    String code = listener.getRedirect().split(":")[2];
 
                                                                     AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
                                                                             .condition(List.of(
@@ -919,7 +919,7 @@ public class MyAwsStack extends TerraformStack {
                                                                                     AlbListenerRuleAction.builder()
                                                                                             .redirect(
                                                                                                     AlbListenerRuleActionRedirect.builder()
-                                                                                                            .statusCode("HTTP_" + code)
+                                                                                                            .statusCode("HTTP_301")
                                                                                                             .protocol(protocol)
                                                                                                             .port(port)
                                                                                                             .build()
@@ -931,7 +931,7 @@ public class MyAwsStack extends TerraformStack {
                                                                             .build();
                                                                 }
 
-                                                                if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("fixed-response")){
+                                                                else if (listenerRule.getCondition().equals("host_header") && listenerRule.getAction().equals("fixed-response")){
 
                                                                     String code = listenerRule.getResponseCode().split(":")[0];
                                                                     String type = listenerRule.getResponseCode().split(":")[1];
@@ -962,6 +962,100 @@ public class MyAwsStack extends TerraformStack {
                                                                             .listenerArn(listenerMap.get(listenerRule.getListenerId()))
                                                                             .build();
                                                                 }
+
+                                                                else if (listenerRule.getCondition().equals("path_pattern") && listenerRule.getAction().equals("forward")){
+
+                                                                    List<AlbListenerRuleAction> listenerRuleActions = new ArrayList<>();
+
+                                                                    for (String targetId: listenerRule.getTargetIds().split(",")){
+                                                                        listenerRuleActions.add(
+                                                                                AlbListenerRuleAction.builder()
+                                                                                        .type("forward")
+                                                                                        .targetGroupArn(tgDeploymentArnMap.get(targetId))
+                                                                                        .build()
+                                                                        );
+                                                                    }
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .pathPattern(
+                                                                                                    AlbListenerRuleConditionPathPattern.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(listenerRuleActions)
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+
+                                                                else if (listenerRule.getCondition().equals("path_pattern") && listenerRule.getAction().equals("redirect")){
+
+                                                                    String protocol = listenerRule.getRedirect().split(":")[0].toUpperCase();
+                                                                    String port = listenerRule.getRedirect().split(":")[1];
+//                                                                    String code = listener.getRedirect().split(":")[2];
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .pathPattern(
+                                                                                                    AlbListenerRuleConditionPathPattern.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(List.of(
+                                                                                    AlbListenerRuleAction.builder()
+                                                                                            .redirect(
+                                                                                                    AlbListenerRuleActionRedirect.builder()
+                                                                                                            .statusCode("HTTP_301")
+                                                                                                            .protocol(protocol)
+                                                                                                            .port(port)
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+
+                                                                else if (listenerRule.getCondition().equals("path_pattern") && listenerRule.getAction().equals("fixed-response")){
+
+                                                                    String code = listenerRule.getResponseCode().split(":")[0];
+                                                                    String type = listenerRule.getResponseCode().split(":")[1];
+                                                                    String msg = listenerRule.getResponseCode().split(":")[2];
+
+                                                                    AlbListenerRule.Builder.create(this, listener.getListenerId() + tempAlb.getName() + vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "listenerRule" + listenerRuleIndex++)
+                                                                            .condition(List.of(
+                                                                                    AlbListenerRuleCondition.builder()
+                                                                                            .pathPattern(
+                                                                                                    AlbListenerRuleConditionPathPattern.builder()
+                                                                                                            .values(List.of(listenerRule.getValue()))
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .action(List.of(
+                                                                                    AlbListenerRuleAction.builder()
+                                                                                            .fixedResponse(
+                                                                                                    AlbListenerRuleActionFixedResponse.builder()
+                                                                                                            .statusCode(code)
+                                                                                                            .contentType(type)
+                                                                                                            .messageBody(msg)
+                                                                                                            .build()
+                                                                                            )
+                                                                                            .build()
+                                                                            ))
+                                                                            .provider(provider)
+                                                                            .listenerArn(listenerMap.get(listenerRule.getListenerId()))
+                                                                            .build();
+                                                                }
+
                                                             }
                                                         }
                                                     }

@@ -1114,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const redirectColumns = document.createElement("div");
         redirectColumns.classList.add("listener-column");
         const redirectLabel = document.createElement("label");
-        redirectLabel.textContent = "Redirect Protocol:Port:Code";
+        redirectLabel.textContent = "Redirect Protocol:Port";
         redirectLabel.style.color = "#505050";
         redirectColumns.style.width = "200px";
         redirectColumns.appendChild(redirectLabel);
@@ -1204,7 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listenerRuleRedirectColumns = document.createElement("div");
         listenerRuleRedirectColumns.classList.add("listener-rule-column");
         const listenerRuleRedirectLabel = document.createElement("label");
-        listenerRuleRedirectLabel.textContent = "Redirect Protocol:Port:Code";
+        listenerRuleRedirectLabel.textContent = "Redirect Protocol:Port";
         listenerRuleRedirectLabel.style.color = "#505050";
         listenerRuleRedirectColumns.style.width = "200px";
         listenerRuleRedirectColumns.appendChild(listenerRuleRedirectLabel);
