@@ -1876,7 +1876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .map(alb => ({
           name: alb.dataset.uuid,
-          tagName: alb.textContent.trim(),
+          tagName: alb.dataset.albName || '',
           type: 'ALB',
           subnetIds: alb.dataset.albSubnetIds.split(',') || [],
           listeners: alb.listeners || []
@@ -1936,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listeners = child.listeners || [];
         const subnetIds = child.dataset.albSubnetIds.split(',') || [];
         const listenerRules = child.listenerRules || [];
+        const tagName = child.dataset.albName || '';
   
         const alb = {
           name,
@@ -2155,7 +2156,7 @@ document.addEventListener('DOMContentLoaded', () => {
           })
           .map(alb => ({
             name: alb.dataset.uuid,
-            tagName: alb.textContent.trim(),
+            tagName: alb.dataset.albName || '',
             type: 'ALB',
             subnetIds: alb.dataset.albSubnetIds.split(',') || [],
             listeners: alb.listeners || [],
