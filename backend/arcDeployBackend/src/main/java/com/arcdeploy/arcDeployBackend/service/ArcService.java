@@ -12,6 +12,6 @@ public interface ArcService {
     ArcDto saveArc(ArcDto arcDto) throws IOException, InterruptedException;
     Map<String,String> deleteArc(ArcDto arcDto) throws IOException, InterruptedException;
 
-    ArcDto updateArc(ArcDto arcDto) throws IOException, InterruptedException;
+    Map<String,String> updateArc(ArcDto arcDto) throws IOException, InterruptedException;
     List<ArcDto> showAllArc();
 }

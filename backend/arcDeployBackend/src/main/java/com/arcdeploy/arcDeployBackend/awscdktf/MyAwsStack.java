@@ -23,8 +23,11 @@ import com.hashicorp.cdktf.providers.aws.provider.AwsProviderConfig;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroup;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroupEgress;
 import com.hashicorp.cdktf.providers.aws.security_group.SecurityGroupIngress;
+import com.hashicorp.cdktf.providers.aws.vpc_security_group_egress_rule.VpcSecurityGroupEgressRule;
+import com.hashicorp.cdktf.providers.aws.vpc_security_group_ingress_rule.VpcSecurityGroupIngressRule;
 import software.constructs.Construct;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +55,7 @@ public class MyAwsStack extends TerraformStack {
         int igwIndex = 0;
         int natIndex = 0;
         int sgIndex = 0;
+        int sgRuleCount = 0;
         int instanceIndex = 0;
         int openVpnIndex = 0;
         int listenerIndex = 0;
@@ -264,6 +268,7 @@ public class MyAwsStack extends TerraformStack {
 
                                                         securityGroup = SecurityGroup.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SG" + sgIndex + vpcIndex + regionIndex)
                                                                 .vpcId(vpcDeployment.getId())
+                                                                .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getTagName() + "-" + tempSg.getName())
                                                                 .egress(List.of(
                                                                         SecurityGroupEgress.builder()
                                                                                 .fromPort(0)
@@ -272,7 +277,6 @@ public class MyAwsStack extends TerraformStack {
                                                                                 .cidrBlocks(List.of("0.0.0.0/0"))
                                                                                 .ipv6CidrBlocks(List.of("::/0")).build()
                                                                 ))
-                                                                .name(awsClouds.get(i).getProjectName() + "-" + tempSg.getTagName() + "-" + tempSg.getName())
                                                                 .tags(Map.of("Name", awsClouds.get(i).getProjectName() + "-" + vpcs.get(k).getTagName() + "-" + tempSg.getTagName()))
                                                                 .provider(provider)
                                                                 .build();
@@ -310,31 +314,30 @@ public class MyAwsStack extends TerraformStack {
 
                                         for (SecurityGroup sg: securityGroupList){
 
-                                            List<SecurityGroupIngress> sgIngressList = new ArrayList<>();
-
                                             for (SgRule ingressRule: ingressRulesMap.get(sg)){
 
                                                 Pattern pattern = Pattern.compile("^\\d{1,3}(\\.\\d{1,3}){3}/\\d{1,2}$");
 
                                                 if(pattern.matcher(ingressRule.getSourceIp()).matches()){
-                                                    SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
+                                                    VpcSecurityGroupIngressRule tempIngress = VpcSecurityGroupIngressRule.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SGRule" + sgRuleCount++ + vpcIndex + regionIndex)
                                                             .fromPort(Integer.parseInt(ingressRule.getPort()))
                                                             .toPort(Integer.parseInt(ingressRule.getPort()))
-                                                            .protocol(ingressRule.getProtocol())
-                                                            .cidrBlocks(List.of(ingressRule.getSourceIp()))
+                                                            .ipProtocol(ingressRule.getProtocol())
+                                                            .cidrIpv4(ingressRule.getSourceIp())
+                                                            .securityGroupId(sg.getId())
+                                                            .provider(provider)
                                                             .build();
-                                                    sgIngressList.add(tempIngress);
                                                 } else {
-                                                    SecurityGroupIngress tempIngress = SecurityGroupIngress.builder()
+                                                    VpcSecurityGroupIngressRule tempIngress = VpcSecurityGroupIngressRule.Builder.create(this, vpcs.get(k).getName() + vpcs.get(k).getCidr() + regions.get(j).getRegionName() + regions.get(j).getName() + awsClouds.get(i).getAcId() + "SGRule" + sgRuleCount++ + vpcIndex + regionIndex)
                                                             .fromPort(Integer.parseInt(ingressRule.getPort()))
                                                             .toPort(Integer.parseInt(ingressRule.getPort()))
-                                                            .protocol(ingressRule.getProtocol())
-                                                            .securityGroups(List.of(sgIdMap.get(ingressRule.getSourceIp())))
+                                                            .ipProtocol(ingressRule.getProtocol())
+                                                            .referencedSecurityGroupId(sgIdMap.get(ingressRule.getSourceIp()))
+                                                            .securityGroupId(sg.getId())
+                                                            .provider(provider)
                                                             .build();
-                                                    sgIngressList.add(tempIngress);
                                                 }
                                             }
-                                            sg.putIngress(sgIngressList);
                                         }
                                     }
 
@@ -440,8 +443,8 @@ public class MyAwsStack extends TerraformStack {
                                                                 .instanceType(instances.get(m).getInstanceType())
                                                                 .ami(ubuntu2004AmiData.getId())
                                                                 .subnetId(subnetDeployment.getId())
-                                                                .securityGroups(List.of(
-                                                                        sgMap.get(instances.get(m).getName())
+                                                                .vpcSecurityGroupIds(List.of(
+                                                                                sgMap.get(instances.get(m).getName())
                                                                 ))
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(instances.get(m).getEphemeralStorage())).build())
@@ -470,7 +473,7 @@ public class MyAwsStack extends TerraformStack {
                                                                 .instanceType(instances.get(m).getInstanceType())
                                                                 .ami(ubuntu2204AmiData.getId())
                                                                 .subnetId(subnetDeployment.getId())
-                                                                .securityGroups(List.of(
+                                                                .vpcSecurityGroupIds(List.of(
                                                                         sgMap.get(instances.get(m).getName())
                                                                 ))
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
@@ -500,7 +503,7 @@ public class MyAwsStack extends TerraformStack {
                                                             .instanceType(instances.get(m).getInstanceType())
                                                             .ami(debian11AmiData.getId())
                                                             .subnetId(subnetDeployment.getId())
-                                                            .securityGroups(List.of(
+                                                            .vpcSecurityGroupIds(List.of(
                                                                     sgMap.get(instances.get(m).getName())
                                                             ))
                                                             .rootBlockDevice(InstanceRootBlockDevice.builder()
@@ -546,8 +549,8 @@ public class MyAwsStack extends TerraformStack {
                                                                 .instanceType(openvpns.get(m).getInstanceType())
                                                                 .ami(openVpn5.getId())
                                                                 .subnetId(subnetDeployment.getId())
-                                                                .securityGroups(List.of(
-                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                .vpcSecurityGroupIds(List.of(
+                                                                        sgMap.get(instances.get(m).getName())
                                                                 ))
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
@@ -565,8 +568,8 @@ public class MyAwsStack extends TerraformStack {
                                                                 .instanceType(openvpns.get(m).getInstanceType())
                                                                 .ami(openVpn10.getId())
                                                                 .subnetId(subnetDeployment.getId())
-                                                                .securityGroups(List.of(
-                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                .vpcSecurityGroupIds(List.of(
+                                                                        sgMap.get(instances.get(m).getName())
                                                                 ))
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())
@@ -584,8 +587,8 @@ public class MyAwsStack extends TerraformStack {
                                                                 .instanceType(openvpns.get(m).getInstanceType())
                                                                 .ami(openVpn25.getId())
                                                                 .subnetId(subnetDeployment.getId())
-                                                                .securityGroups(List.of(
-                                                                        openVpnSgMap.get(openvpns.get(m).getName())
+                                                                .vpcSecurityGroupIds(List.of(
+                                                                        sgMap.get(instances.get(m).getName())
                                                                 ))
                                                                 .rootBlockDevice(InstanceRootBlockDevice.builder()
                                                                         .volumeSize(Integer.parseInt(openvpns.get(m).getEphemeralStorage())).build())

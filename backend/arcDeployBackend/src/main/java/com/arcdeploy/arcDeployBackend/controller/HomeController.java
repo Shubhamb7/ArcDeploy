@@ -31,6 +31,11 @@ public class HomeController {
         return ResponseEntity.status(201).body(arcService.saveArc(arcDto));
     }
 
+    @PutMapping
+    public ResponseEntity<?> modifyArc(@RequestBody ArcDto arcDto) throws IOException, InterruptedException {
+        return ResponseEntity.ok(arcService.updateArc(arcDto));
+    }
+
     @DeleteMapping
     public ResponseEntity<?> deleteArc(@RequestBody ArcDto arcDto) throws IOException, InterruptedException {
         return ResponseEntity.ok(arcService.deleteArc(arcDto));
