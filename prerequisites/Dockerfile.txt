@@ -1,6 +1,7 @@
 FROM ubuntu:20.04
 WORKDIR /opt/app
 COPY destroy.sh ./
+COPY update.sh ./
 RUN chmod 755 destroy.sh
 RUN apt update && apt install openjdk-17-jdk unzip curl wget -y
 RUN wget https://releases.hashicorp.com/terraform/1.5.2/terraform_1.5.2_linux_386.zip
